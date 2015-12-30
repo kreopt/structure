@@ -19,9 +19,7 @@ namespace serializers {
             std::string>;
 
     class serializer {
-        value_type value_type_;
     public:
-
         using ptr = std::shared_ptr<serializer>;
 
         enum class value_type {
@@ -33,6 +31,24 @@ namespace serializers {
             Object,
             Array
         };
+    private:
+        value_type value_type_;
+    protected:
+        inline void set_type(value_type _type) {value_type_ = _type;};
+        struct value_type_visitor : public boost::static_visitor<serializers::serializer::value_type> {
+            value_type operator()(serializers::serializable::int_t _val) const { return value_type::String; }
+            value_type operator()(serializers::serializable::float_t _val) const { return value_type::Float; }
+            value_type operator()(serializers::serializable::c_str_t _val) const { return value_type::String; }
+            value_type operator()(serializers::serializable::bool_t _val) const { return value_type::Bool; }
+            value_type operator()(serializers::serializable::int_t &&_val) const { return value_type::String; }
+            value_type operator()(serializers::serializable::float_t &&_val) const { return value_type::Float; }
+            value_type operator()(serializers::serializable::c_str_t &&_val) const { return value_type::String; }
+            value_type operator()(serializers::serializable::bool_t &&_val) const { return value_type::Bool; }
+            value_type operator()(const std::string & _val) const { return value_type::String; }
+            value_type operator()(std::string && _val) const { return value_type::String; }
+        };
+    public:
+
 
         virtual std::string as_string() const = 0;
         virtual serializable::int_t as_int() const = 0;
@@ -84,6 +100,8 @@ namespace serializers {
 
         virtual serializer::ptr get(const std::string &_key, const value &_default) const = 0;
         virtual serializer::ptr get(const std::string &_key, value &&_default) const = 0;
+
+        // TODO: symbol type as keys
 
         virtual serializer::ptr set(value &&_val) = 0;
         virtual serializer::ptr set(const value &_val) = 0;  // atom

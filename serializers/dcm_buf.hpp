@@ -2,15 +2,20 @@
 #define SERIALIZERS_DCM_BUF_HPP
 
 #include <unordered_map>
-#include <dcm/interprocess/core/util.hpp>
+#include <dcm/interprocess/util.hpp>
 #include "serializer.hpp"
 
 namespace serializers {
     class dcm_buf : public serializers::serializer, public std::enable_shared_from_this<dcm_buf>{
-        using obj_t = std::unordered_map<interproc::symbol_t, value>;
-        using arr_t = std::vector<value>;
+        using val_t = std::shared_ptr<value>
+        using obj_t = std::shared_ptr<std::unordered_map<interproc::symbol_t, val_t>>;
+        using arr_t = std::shared_ptr<std::vector<val_t>>;
+        using var_t = std::shared_ptr<boost::variant<val_t, obj_t, arr_t>>;
+        var_t val_;
 
-        boost::variant<value, obj_t, arr_t> val_;
+        dcm_buf(var_t _obj);
+
+        static serializer::ptr create(var_t _obj);
 
     public:
 
@@ -19,6 +24,8 @@ namespace serializers {
         virtual serializable::int_t as_int() const override;
 
         virtual serializable::float_t as_float() const override;
+
+        virtual bool as_bool() const override;
 
         virtual size_t size() const override;
 
