@@ -28,6 +28,16 @@ namespace serializers {
         virtual bool emplace(const std::string &_key, const value &_val) override;
         virtual bool emplace(const std::string &_key, value &&_val) override;
 
+
+        virtual bool append(const std::initializer_list<value> &_val) override;
+
+        virtual bool append(const std::initializer_list<std::pair<std::string, value>> &_val) override;
+
+        virtual bool emplace(const std::string &_key, const std::initializer_list<value> &_val) override;
+
+        virtual bool emplace(const std::string &_key,
+                             const std::initializer_list<std::pair<std::string, value>> &_val) override;
+
         virtual std::string as_string() const override;
         virtual double as_float() const override;
         virtual serializable::int_t as_int() const override;

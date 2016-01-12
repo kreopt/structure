@@ -6,14 +6,16 @@
 using namespace std;
 using namespace literals::string_literals;
 int main() {
-    serializers::serializer::ptr s = serializers::dcm_buf::create();
+    serializers::serializer::ptr s = serializers::dcm_buf::create_object();
 
-    s->at("i")->set(1);
-    s->at("s")->set("s");
-    s->at("b")->set(true);
-    s->at("f")->set(1.1);
-    s->at("a")->set({1,"a",1.1,true});
-    s->at("o")->set({{"a", 1}, {"b", 1}});
+    s->emplace("i", 1);
+    s->emplace("s", "s");
+    s->emplace("b", true);
+    s->emplace("f", 1.1);
+    s->emplace("a", {1,"a",1.1,true});
+    s->emplace("o", {{"a", 1}, {"b", 1}});
+
+    std::cout << s->get("s", ":(")->as_string() << std::endl;
 
     std::string buf = s->stringify();
 

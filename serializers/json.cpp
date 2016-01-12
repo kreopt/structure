@@ -136,3 +136,20 @@ serializers::json::~json() {
         delete root_;
     }
 }
+
+bool serializers::json::append(const std::initializer_list<value> &_val) {
+    return false;
+}
+
+bool serializers::json::append(const std::initializer_list<std::pair<std::string, value>> &_val) {
+    return false;
+}
+
+bool serializers::json::emplace(const std::string &_key, const std::initializer_list<value> &_val) {
+    return false;
+}
+
+bool serializers::json::emplace(const std::string &_key,
+                                const std::initializer_list<std::pair<std::string, value>> &_val) {
+    return false;
+}

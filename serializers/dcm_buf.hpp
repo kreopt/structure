@@ -11,8 +11,10 @@ namespace serializers {
         class _var_t;
         using var_t = std::shared_ptr<_var_t>;
         using val_t = std::shared_ptr<value>;
-        using obj_t = std::shared_ptr<std::unordered_map<bp::symbol_t, var_t>>;
-        using arr_t = std::shared_ptr<std::vector<var_t>>;
+        using _obj_t = std::unordered_map<bp::symbol_t, var_t>;
+        using obj_t = std::shared_ptr<_obj_t>;
+        using _arr_t = std::vector<var_t>;
+        using arr_t = std::shared_ptr<_arr_t>;
 
         class _var_t : public boost::variant<val_t, obj_t, arr_t> {
         public:
@@ -24,6 +26,12 @@ namespace serializers {
             _var_t(arr_t &&_val) : boost::variant<val_t, obj_t, arr_t>(_val){}
         };
 
+        struct variant_visitor : public boost::static_visitor<serializers::serializer::value_type> {
+            value_type operator()(val_t _val) const { return boost::apply_visitor(value_type_visitor(), *_val); }
+            value_type operator()(obj_t _val) const { return value_type::Object; }
+            value_type operator()(arr_t _val) const { return value_type::Array; }
+        };
+
         var_t val_;
 
         dcm_buf(var_t _obj);
@@ -32,6 +40,8 @@ namespace serializers {
 
     public:
         static serializer::ptr create();
+        static serializer::ptr create_object();
+        static serializer::ptr create_array();
 
         virtual std::string as_string() const override;
 
@@ -50,6 +60,16 @@ namespace serializers {
         virtual void append(const value &_val) override;
 
         virtual void append(value &&_val) override;
+
+
+        virtual bool append(const std::initializer_list<value> &_val) override;
+
+        virtual bool append(const std::initializer_list<std::pair<std::string, value>> &_val) override;
+
+        virtual bool emplace(const std::string &_key, const std::initializer_list<value> &_val) override;
+
+        virtual bool emplace(const std::string &_key,
+                             const std::initializer_list<std::pair<std::string, value>> &_val) override;
 
         virtual serializer::ptr at(const char *_key) override;
 

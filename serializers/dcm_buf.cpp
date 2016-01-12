@@ -8,6 +8,8 @@ std::string serializers::dcm_buf::as_string() const {
             return std::to_string(boost::get<serializable::float_t>(*boost::get<val_t>(*val_)));
         case value_type::Bool:
             return std::to_string(boost::get<serializable::bool_t>(*boost::get<val_t>(*val_)));
+        case value_type::CString:
+            return boost::get<serializable::c_str_t>(*boost::get<val_t>(*val_));
         case value_type::String:
             return boost::get<std::string>(*boost::get<val_t>(*val_));
         default:
@@ -83,9 +85,31 @@ void serializers::dcm_buf::append(serializers::value &&_val) {
     }
 }
 
+bool serializers::dcm_buf::append(const std::initializer_list<value> &_val) {
+    if (type() == value_type::Array) {
+        // TODO: iterate over initializer list
+        arr_t arr = std::make_shared<_arr_t>();
+        boost::get<arr_t>(*val_)->push_back(std::make_shared<_var_t>(arr));
+        return true;
+    } else {
+        throw std::range_error("not an array");
+    }
+}
+
+bool serializers::dcm_buf::append(const std::initializer_list<std::pair<std::string, value>> &_val) {
+    if (type() == value_type::Array) {
+        // TODO: iterate over initializer list
+        arr_t arr = std::make_shared<_arr_t>();
+        boost::get<arr_t>(*val_)->push_back(std::make_shared<_var_t>(arr));
+        return true;
+    } else {
+        throw std::range_error("not an array");
+    }
+}
+
 serializers::serializer::ptr serializers::dcm_buf::at(const char *_key) {
     if (type() == value_type::Object) {
-        return create((*boost::get<obj_t>(*val_))[bp::symbol(_key)]);
+        return create(boost::get<obj_t>(*val_)->at(bp::symbol(_key)));
     } else {
         throw std::range_error("not an object");
     }
@@ -93,7 +117,7 @@ serializers::serializer::ptr serializers::dcm_buf::at(const char *_key) {
 
 const serializers::serializer::ptr serializers::dcm_buf::at(const char *_key) const {
     if (type() == value_type::Object) {
-        return create((*boost::get<obj_t>(*val_))[bp::symbol(_key)]);
+        return create(boost::get<obj_t>(*val_)->at(bp::symbol(_key)));
     } else {
         throw std::range_error("not an object");
     }
@@ -114,6 +138,28 @@ bool serializers::dcm_buf::emplace(const std::string &_key, serializers::value &
         throw std::range_error("not an object");
     }
 }
+
+bool serializers::dcm_buf::emplace(const std::string &_key, const std::initializer_list<value> &_val) {
+    if (type() == value_type::Object) {
+        // TODO: iterate over initializer list
+        obj_t obj = std::make_shared<_obj_t>();
+        return boost::get<obj_t>(*val_)->emplace(bp::symbol(_key), std::make_shared<_var_t>(obj)).second;
+    } else {
+        throw std::range_error("not an object");
+    }
+}
+
+bool serializers::dcm_buf::emplace(const std::string &_key,
+                                   const std::initializer_list<std::pair<std::string, value>> &_val) {
+    if (type() == value_type::Object) {
+        // TODO: iterate over initializer list
+        obj_t obj = std::make_shared<_obj_t>();
+        return boost::get<obj_t>(*val_)->emplace(bp::symbol(_key), std::make_shared<_var_t>(obj)).second;
+    } else {
+        throw std::range_error("not an object");
+    }
+}
+
 
 serializers::serializer::ptr serializers::dcm_buf::get(const std::string &_key,
                                                        const serializers::value &_default) const {
@@ -143,19 +189,32 @@ serializers::serializer::ptr serializers::dcm_buf::get(const std::string &_key, 
 }
 
 serializers::serializer::ptr serializers::dcm_buf::set(serializers::value &&_val) {
-    *val_ = std::make_shared<value>(_val);
+    if (val_) {
+        *val_ = std::make_shared<value>(_val);
+    } else {
+        val_ = std::make_shared<_var_t>(std::make_shared<value>(_val));
+        std::cout << "new " << val_ << std::endl;
+    }
     set_type(boost::apply_visitor(value_type_visitor(),_val));
     return shared_from_this();
 }
 
 serializers::serializer::ptr serializers::dcm_buf::set(const serializers::value &_val) {
-    *val_ = std::make_shared<value>(_val);
+    if (val_) {
+        *val_ = std::make_shared<value>(_val);
+    } else {
+        val_ = std::make_shared<_var_t>(std::make_shared<value>(_val));
+    }
     set_type(boost::apply_visitor(value_type_visitor(),_val));
     return shared_from_this();
 }
 
 serializers::serializer::ptr serializers::dcm_buf::set(const std::initializer_list<value> &_val) {
-    *val_ = arr_t();
+    if (val_) {
+        *val_ = std::make_shared<_arr_t>();
+    } else {
+        val_ = std::make_shared<_var_t>(std::make_shared<_arr_t>());
+    }
     // TODO: iterate over initializer list
     set_type(value_type::Array);
     return shared_from_this();
@@ -163,7 +222,11 @@ serializers::serializer::ptr serializers::dcm_buf::set(const std::initializer_li
 
 serializers::serializer::ptr serializers::dcm_buf::set(
         const std::initializer_list<std::pair<std::string, value>> &_val) {
-    *val_ = obj_t();
+    if (val_) {
+        *val_ = std::make_shared<_obj_t>();
+    } else {
+        val_ = std::make_shared<_var_t>(std::make_shared<_obj_t>());
+    }
     // TODO: iterate over initializer list
     set_type(value_type::Object);
     return shared_from_this();
@@ -180,14 +243,30 @@ void serializers::dcm_buf::parse(const std::string &_str) {
 }
 
 serializers::serializer::ptr serializers::dcm_buf::create(serializers::dcm_buf::var_t _obj) {
+    std::cout << *_obj << std::endl;
     return std::shared_ptr<dcm_buf>(new dcm_buf(_obj));
 }
 
 serializers::serializer::ptr serializers::dcm_buf::create() {
-    obj_t obj;
+    val_t obj;
     return create(std::make_shared<_var_t>(obj));
 }
 
-serializers::dcm_buf::dcm_buf(serializers::dcm_buf::var_t _obj) {
-    val_ = _obj;
+serializers::serializer::ptr serializers::dcm_buf::create_object() {
+    obj_t obj = std::make_shared<_obj_t>();
+    return create(std::make_shared<_var_t>(obj));
+}
+
+serializers::serializer::ptr serializers::dcm_buf::create_array() {
+    arr_t obj = std::make_shared<_arr_t>();
+    return create(std::make_shared<_var_t>(obj));
+}
+
+serializers::dcm_buf::dcm_buf(serializers::dcm_buf::var_t _obj) : val_(_obj) {
+    if (_obj) {
+        set_type(boost::apply_visitor(variant_visitor(), *val_));
+        std::cout << char(type()) << std::endl;
+    } else {
+        set_type(value_type::Null);
+    }
 }

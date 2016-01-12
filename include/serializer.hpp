@@ -22,27 +22,29 @@ namespace serializers {
     public:
         using ptr = std::shared_ptr<serializer>;
 
-        enum class value_type {
-            Int,
-            Float,
-            String,
-            Bool,
-            Null,
-            Object,
-            Array
+        enum class value_type: char {
+            Int = 'i',
+            Float = 'f',
+            CString = 'c',
+            String = 's',
+            Bool = 'b',
+            Bytes = 'r',
+            Null = 'n',
+            Object = 'o',
+            Array = 'a'
         };
     private:
         value_type value_type_;
     protected:
         inline void set_type(value_type _type) {value_type_ = _type;};
         struct value_type_visitor : public boost::static_visitor<serializers::serializer::value_type> {
-            value_type operator()(serializers::serializable::int_t _val) const { return value_type::String; }
+            value_type operator()(serializers::serializable::int_t _val) const { return value_type::Int; }
             value_type operator()(serializers::serializable::float_t _val) const { return value_type::Float; }
-            value_type operator()(serializers::serializable::c_str_t _val) const { return value_type::String; }
+            value_type operator()(serializers::serializable::c_str_t _val) const { return value_type::CString; }
             value_type operator()(serializers::serializable::bool_t _val) const { return value_type::Bool; }
-            value_type operator()(serializers::serializable::int_t &&_val) const { return value_type::String; }
+            value_type operator()(serializers::serializable::int_t &&_val) const { return value_type::Int; }
             value_type operator()(serializers::serializable::float_t &&_val) const { return value_type::Float; }
-            value_type operator()(serializers::serializable::c_str_t &&_val) const { return value_type::String; }
+            value_type operator()(serializers::serializable::c_str_t &&_val) const { return value_type::CString; }
             value_type operator()(serializers::serializable::bool_t &&_val) const { return value_type::Bool; }
             value_type operator()(const std::string & _val) const { return value_type::String; }
             value_type operator()(std::string && _val) const { return value_type::String; }
@@ -91,12 +93,16 @@ namespace serializers {
         virtual const serializer::ptr at(int index) const = 0;
         virtual void append(const value &_val) = 0;
         virtual void append(value &&_val) = 0;
+        virtual bool append(const std::initializer_list<value> &_val) = 0;
+        virtual bool append(const std::initializer_list<std::pair<std::string, value>> &_val) = 0;
 
         // objects:
         virtual serializer::ptr at(const char *_key) = 0;
         virtual const serializer::ptr at(const char *_key) const = 0;
         virtual bool emplace(const std::string &_key, const value &_val) = 0;
         virtual bool emplace(const std::string &_key, value &&_val) = 0;
+        virtual bool emplace(const std::string &_key, const std::initializer_list<value> &_val) = 0;
+        virtual bool emplace(const std::string &_key, const std::initializer_list<std::pair<std::string, value>> &_val) = 0;
 
         virtual serializer::ptr get(const std::string &_key, const value &_default) const = 0;
         virtual serializer::ptr get(const std::string &_key, value &&_default) const = 0;
