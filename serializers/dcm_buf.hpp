@@ -2,15 +2,28 @@
 #define SERIALIZERS_DCM_BUF_HPP
 
 #include <unordered_map>
-#include <dcm/interprocess/util.hpp>
+#include <binelpro/symbol.hpp>
 #include "serializer.hpp"
 
 namespace serializers {
     class dcm_buf : public serializers::serializer, public std::enable_shared_from_this<dcm_buf>{
-        using val_t = std::shared_ptr<value>
-        using obj_t = std::shared_ptr<std::unordered_map<interproc::symbol_t, val_t>>;
-        using arr_t = std::shared_ptr<std::vector<val_t>>;
-        using var_t = std::shared_ptr<boost::variant<val_t, obj_t, arr_t>>;
+
+        class _var_t;
+        using var_t = std::shared_ptr<_var_t>;
+        using val_t = std::shared_ptr<value>;
+        using obj_t = std::shared_ptr<std::unordered_map<bp::symbol_t, var_t>>;
+        using arr_t = std::shared_ptr<std::vector<var_t>>;
+
+        class _var_t : public boost::variant<val_t, obj_t, arr_t> {
+        public:
+            _var_t(const val_t &_val) : boost::variant<val_t, obj_t, arr_t>(_val){}
+            _var_t(val_t &&_val) : boost::variant<val_t, obj_t, arr_t>(_val){}
+            _var_t(const obj_t &_val) : boost::variant<val_t, obj_t, arr_t>(_val){}
+            _var_t(obj_t &&_val) : boost::variant<val_t, obj_t, arr_t>(_val){}
+            _var_t(const arr_t &_val) : boost::variant<val_t, obj_t, arr_t>(_val){}
+            _var_t(arr_t &&_val) : boost::variant<val_t, obj_t, arr_t>(_val){}
+        };
+
         var_t val_;
 
         dcm_buf(var_t _obj);
@@ -18,6 +31,7 @@ namespace serializers {
         static serializer::ptr create(var_t _obj);
 
     public:
+        static serializer::ptr create();
 
         virtual std::string as_string() const override;
 

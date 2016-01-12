@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.2)
 project(serializers)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
@@ -7,9 +7,11 @@ set(BUILD_DCM ON)
 
 set(SOURCE_FILES main.cpp)
 
+find_package(BpUtil REQUIRED)
+
 include_directories(include)
 
-add_executable(serializers ${SOURCE_FILES} include/serializer.hpp serializers/json.hpp serializers/json.cpp)
+add_executable(serializers ${SOURCE_FILES} include/serializer.hpp serializers/json.hpp serializers/json.cpp serializers/dcm_buf.cpp)
 
 if (BUILD_JSON)
     find_package(JsonCpp REQUIRED)
@@ -21,5 +23,5 @@ endif()
 if (BUILD_DCM)
     find_package(DcmIpc REQUIRED)
     add_library(${PROJECT_NAME}_dcmbuf SHARED serializers/dcm_buf.cpp serializers/dcm_buf.hpp)
-    target_link_libraries(serializers  ${DCMIPC_LIBRARIES})
+    target_link_libraries(serializers  ${DCMIPC_LIBRARIES} ${BPUTIL_LIBRARIES})
 ENDIF()

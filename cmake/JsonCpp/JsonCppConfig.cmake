@@ -13,8 +13,9 @@
 # only look in default directories
 find_path(
         JSONCPP_INCLUDE_DIR
-        NAMES jsoncpp/json/json.h json/json.h
+        NAMES jsoncpp/json/json.h json/json.h jsoncpp/json.h
         DOC "jsoncpp include dir"
+        PATHS /usr/local/include /usr/include
 )
 
 find_library(

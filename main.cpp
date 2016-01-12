@@ -1,11 +1,12 @@
 #include <iostream>
 #include <serializer.hpp>
 #include "serializers/json.hpp"
+#include "serializers/dcm_buf.hpp"
 
 using namespace std;
 using namespace literals::string_literals;
 int main() {
-    serializers::serializer::ptr s = serializers::json::create();
+    serializers::serializer::ptr s = serializers::dcm_buf::create();
 
     s->at("i")->set(1);
     s->at("s")->set("s");
