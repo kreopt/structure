@@ -3,7 +3,9 @@
 
 #include <string>
 #include <boost/variant.hpp>
-namespace serializers {
+#include <binelpro/symbol.hpp>
+
+namespace bp {
 
     namespace serializable {
         using int_t = int32_t;
@@ -11,16 +13,23 @@ namespace serializers {
         using c_str_t = const char*;
         using bool_t = bool;
     }
-    using value = boost::variant<
-            serializable::c_str_t,
-            serializable::int_t,
-            serializable::float_t,
-            serializable::bool_t,
-            std::string>;
+
+    namespace serializers {
+        enum class type: symbol_t {
+            Dcm = "dcmbuf"_sym,
+            Json = "json"_sym
+        };
+    }
 
     class serializer {
     public:
         using ptr = std::shared_ptr<serializer>;
+        using value = boost::variant<
+                serializable::c_str_t,//TODO: remove
+                serializable::int_t,
+                serializable::float_t,
+                serializable::bool_t,
+                std::string>;
 
         enum class value_type: char {
             Int = 'i',
@@ -34,18 +43,18 @@ namespace serializers {
             Array = 'a'
         };
     private:
-        value_type value_type_;
+        value_type value_type_ = value_type::Null;
     protected:
         inline void set_type(value_type _type) {value_type_ = _type;};
-        struct value_type_visitor : public boost::static_visitor<serializers::serializer::value_type> {
-            value_type operator()(serializers::serializable::int_t _val) const { return value_type::Int; }
-            value_type operator()(serializers::serializable::float_t _val) const { return value_type::Float; }
-            value_type operator()(serializers::serializable::c_str_t _val) const { return value_type::CString; }
-            value_type operator()(serializers::serializable::bool_t _val) const { return value_type::Bool; }
-            value_type operator()(serializers::serializable::int_t &&_val) const { return value_type::Int; }
-            value_type operator()(serializers::serializable::float_t &&_val) const { return value_type::Float; }
-            value_type operator()(serializers::serializable::c_str_t &&_val) const { return value_type::CString; }
-            value_type operator()(serializers::serializable::bool_t &&_val) const { return value_type::Bool; }
+        struct value_type_visitor : public boost::static_visitor<value_type> {
+            value_type operator()(serializable::int_t _val) const { return value_type::Int; }
+            value_type operator()(serializable::float_t _val) const { return value_type::Float; }
+            value_type operator()(serializable::c_str_t _val) const { return value_type::CString; }
+            value_type operator()(serializable::bool_t _val) const { return value_type::Bool; }
+            value_type operator()(serializable::int_t &&_val) const { return value_type::Int; }
+            value_type operator()(serializable::float_t &&_val) const { return value_type::Float; }
+            value_type operator()(serializable::c_str_t &&_val) const { return value_type::CString; }
+            value_type operator()(serializable::bool_t &&_val) const { return value_type::Bool; }
             value_type operator()(const std::string & _val) const { return value_type::String; }
             value_type operator()(std::string && _val) const { return value_type::String; }
         };
@@ -107,8 +116,6 @@ namespace serializers {
         virtual serializer::ptr get(const std::string &_key, const value &_default) const = 0;
         virtual serializer::ptr get(const std::string &_key, value &&_default) const = 0;
 
-        // TODO: symbol type as keys
-
         virtual serializer::ptr set(value &&_val) = 0;
         virtual serializer::ptr set(const value &_val) = 0;  // atom
         virtual serializer::ptr set(const std::initializer_list<value> &_val) = 0;   // array
@@ -118,6 +125,9 @@ namespace serializers {
         virtual std::string stringify() const = 0;
         virtual void parse(const std::string &_str) = 0;
 
+        // TODO: iterators for objects and arrays
+
+        static serializer::ptr create(bp::serializers::type _type);
     };
 }
 
