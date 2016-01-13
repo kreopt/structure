@@ -1,5 +1,5 @@
-#ifndef NVAPI_SERIALIZED_VALUE_HPP
-#define NVAPI_SERIALIZED_VALUE_HPP
+#ifndef BP_SERIALIZER_HPP
+#define BP_SERIALIZER_HPP
 
 #include <string>
 #include <boost/variant.hpp>
@@ -132,4 +132,4 @@ namespace bp {
 }
 
 
-#endif //NVAPI_SERIALIZED_VALUE_HPP
+#endif //BP_SERIALIZER_HPP
