@@ -86,6 +86,9 @@ bool bp::serializers::dcm_buf::append(const std::initializer_list<value> &_val) 
     if (type() == value_type::Array) {
         // TODO: iterate over initializer list
         arr_t arr = std::make_shared<_arr_t>();
+        for (auto item: _val) {
+            arr->push_back(std::make_shared<_var_t>(item));
+        }
         get_variant<arr_t>()->push_back(std::make_shared<_var_t>(arr));
         return true;
     } else {
@@ -96,9 +99,11 @@ bool bp::serializers::dcm_buf::append(const std::initializer_list<value> &_val) 
 bool bp::serializers::dcm_buf::append(const std::initializer_list<std::pair<std::string, value>> &_val) {
     initialize_if_null(value_type::Array);
     if (type() == value_type::Array) {
-        // TODO: iterate over initializer list
-        arr_t arr = std::make_shared<_arr_t>();
-        get_variant<arr_t>()->push_back(std::make_shared<_var_t>(arr));
+        obj_t obj = std::make_shared<_obj_t>();
+        for (auto item: _val) {
+            obj->emplace(bp::symbol(item.first), std::make_shared<_var_t>(item.second));
+        }
+        get_variant<arr_t>()->push_back(std::make_shared<_var_t>(obj));
         return true;
     } else {
         throw std::range_error("not an array");
@@ -107,7 +112,7 @@ bool bp::serializers::dcm_buf::append(const std::initializer_list<std::pair<std:
 
 bp::serializer::ptr bp::serializers::dcm_buf::at(const char *_key) {
     if (type() == value_type::Object) {
-        return create(get_variant<arr_t>()->at(bp::symbol(_key)));
+        return create(get_variant<obj_t>()->at(bp::symbol(_key)));
     } else {
         throw std::range_error("not an object");
     }
@@ -241,7 +246,11 @@ std::string bp::serializers::dcm_buf::stringify() const {
 
     std::string r;
     auto tp = type();
-    r+=char(tp);
+    value_type ntp = tp;
+    if (tp == value_type::CString || tp == value_type::Bytes) {
+        ntp = value_type::String;
+    }
+    r+=char(ntp);
     size_block sz;
     switch (tp){
         case value_type::Object: {
@@ -290,8 +299,71 @@ std::string bp::serializers::dcm_buf::stringify() const {
     return r;
 }
 
-void bp::serializers::dcm_buf::parse(const std::string &_str) {
+bp::serializers::dcm_buf::var_t bp::serializers::dcm_buf::parse_variant(std::string::const_iterator &_it) {
 
+    value_type tp = static_cast<value_type >(_it[0]);
+    size_block sz;
+    _it++;
+
+    switch (tp) {
+        case value_type::Object:
+        case value_type::Array:
+        case value_type::String:
+        case value_type::CString:
+        case value_type::Bytes:
+            sz = reinterpret_cast<const size_block*>(&(*_it))[0];
+            _it +=sizeof(size_block);
+            break;
+        default:break;
+    }
+
+    switch (tp) {
+        case value_type::Object:{
+            obj_t obj = std::make_shared<_obj_t>();
+            for (int i=0; i<sz; i++) {
+                bp::symbol_t key = reinterpret_cast<const bp::symbol_t*>(&(*_it))[0];
+                _it +=sizeof(bp::symbol_t);
+                obj->emplace(key, parse_variant(_it));
+            }
+            return std::make_shared<_var_t>(obj);
+        }
+        case value_type::Array: {
+            arr_t obj = std::make_shared<_arr_t>();
+            for (int i=0; i<sz; i++) {
+                obj->emplace_back(parse_variant(_it));
+            }
+            return std::make_shared<_var_t>(obj);
+        }
+        case value_type::String: {
+            val_t obj = std::make_shared<value>(std::string(_it, _it+sz));
+            _it += sz;
+            return std::make_shared<_var_t>(obj);
+        }
+        case value_type::Int:{
+            val_t obj = std::make_shared<value>(reinterpret_cast<const serializable::int_t*>(&(*_it))[0]);
+            _it += sizeof(serializable::int_t);
+            return std::make_shared<_var_t>(obj);
+        }
+        case value_type::Float:{
+            val_t obj = std::make_shared<value>(reinterpret_cast<const serializable::float_t*>(&(*_it))[0]);
+            _it += sizeof(serializable::float_t);
+            return std::make_shared<_var_t>(obj);
+        }
+        case value_type::Bool:{
+            val_t obj = std::make_shared<value>(*_it?true:false);
+            _it += 1;
+            return std::make_shared<_var_t>(obj);
+        }
+
+    }
+}
+
+void bp::serializers::dcm_buf::parse(const std::string &_str) {
+    val_.reset();
+    auto it = _str.begin();
+    value_type tp = static_cast<value_type >(*it);
+    set_type(tp);
+    val_ = parse_variant(it);
 }
 
 bp::serializer::ptr bp::serializers::dcm_buf::create(bp::serializers::dcm_buf::var_t _obj) {

@@ -85,6 +85,7 @@ namespace bp {
                 }
             }
 
+            var_t parse_variant(std::string::const_iterator &_it);
         public:
             static serializer::ptr create();
 
