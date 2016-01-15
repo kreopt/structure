@@ -90,7 +90,7 @@ namespace bp {
                     _it+=sizeof(symbol_t::hash_type);
                     size_block key_size = reinterpret_cast<const size_block*>(&(*_it))[0];
                     _it+=sizeof(size_block);
-                    symbol_t key(hash, std::string(_it, _it+key_size).c_str());
+                    symbol_t key(std::string(_it, _it+key_size).c_str());
                     _it += key_size;
                     obj->emplace(key, parse_variant(_it));
                 }

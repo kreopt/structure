@@ -24,10 +24,12 @@ int main() {
         std::string buf = s->stringify<bp::serializers::type::Json>();
         auto ps = bp::serializer::create();
         ps->parse<bp::serializers::type::Json>(buf);
+        std::string buf1 = ps->stringify<bp::serializers::type::Json>();
 //    }
-    std::cout << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tp).count() << std::endl;
+    std::cout << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tp).count() << "mcs" << std::endl;
     std::cout << buf << std::endl;
     std::cout << ps->get("s", 0)->as_string() << std::endl;
+    std::cout << buf1 << std::endl;
 
     return 0;
 }

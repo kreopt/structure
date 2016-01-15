@@ -173,19 +173,19 @@ namespace bp {
         bool emplace(const std::string &_key, const variant_t &_val) ;
         bool emplace(const std::string &_key, variant_t &&_val) ;
         bool emplace(const std::string &_key, const std::initializer_list<variant_t> &_val) ;
-        bool emplace(const std::string &_key, const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;
+        bool emplace(const std::string &_key, const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) ;
         bool emplace(const symbol_t &_key, const variant_t &_val) ;
         bool emplace(const symbol_t &_key, variant_t &&_val) ;
         bool emplace(const symbol_t &_key, const std::initializer_list<variant_t> &_val) ;
-        bool emplace(const symbol_t &_key, const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;
+        bool emplace(const symbol_t &_key, const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) ;
         bool emplace(symbol_t &&_key, const variant_t &_val) ;
         bool emplace(symbol_t &&_key, variant_t &&_val) ;
         bool emplace(symbol_t &&_key, const std::initializer_list<variant_t> &_val) ;
-        bool emplace(symbol_t &&_key, const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;
+        bool emplace(symbol_t &&_key, const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) ;
         bool emplace(const char* _key, const variant_t &_val) ;
         bool emplace(const char* _key, variant_t &&_val) ;
         bool emplace(const char* _key, const std::initializer_list<variant_t> &_val) ;
-        bool emplace(const char* _key, const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;
+        bool emplace(const char* _key, const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) ;
 
         serializer::ptr get(const std::string &_key, const variant_t &_default) const ;
         serializer::ptr get(const std::string &_key, variant_t &&_default) const ;
@@ -227,6 +227,12 @@ namespace bp {
 
     template<>
     std::string serializer::stringify<serializers::type::Json>() const;
+    template<>
+    void serializer::parse<serializers::type::Json>(const std::string &_str);
+    template<>
+    std::string serializer::stringify<serializers::type::Dcm>() const;
+    template<>
+    void serializer::parse<serializers::type::Dcm>(const std::string &_str);
 }
 
 

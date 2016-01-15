@@ -196,12 +196,12 @@ bool bp::serializer::emplace(const bp::symbol_t &_key, const std::initializer_li
 }
 
 bool bp::serializer::emplace(const bp::symbol_t &_key,
-                             const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
+                             const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         object_ptr obj = std::make_shared<object_t>();
         for (auto item: _val) {
-            obj->emplace(bp::symbol(item.first), std::make_shared<variant_t>(item.second));
+            obj->emplace(item.first, std::make_shared<variant_t>(item.second));
         }
         return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(obj)).second;
     } else {
@@ -241,12 +241,12 @@ bool bp::serializer::emplace(bp::symbol_t &&_key, const std::initializer_list<va
 }
 
 bool bp::serializer::emplace(bp::symbol_t &&_key,
-                             const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
+                             const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         object_ptr obj = std::make_shared<object_t>();
         for (auto item: _val) {
-            obj->emplace(bp::symbol(item.first), std::make_shared<variant_t>(item.second));
+            obj->emplace(item.first, std::make_shared<variant_t>(item.second));
         }
         return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(obj)).second;
     } else {
@@ -267,7 +267,7 @@ bool bp::serializer::emplace(const char *_key, const std::initializer_list<varia
 }
 
 bool bp::serializer::emplace(const char *_key,
-                             const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
+                             const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) {
     return emplace(bp::symbol(_key), _val);
 }
 
@@ -284,7 +284,7 @@ bool bp::serializer::emplace(const std::string &_key, const std::initializer_lis
 }
 
 bool bp::serializer::emplace(const std::string &_key,
-                             const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
+                             const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) {
     return emplace(bp::symbol(_key), _val);
 }
 

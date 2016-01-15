@@ -75,10 +75,6 @@ namespace bp {
     template<>
     void serializer::parse<serializers::type::Json>(const std::string &_str) {
         val_.reset();
-        auto it = _str.begin();
-        value_type tp = static_cast<value_type >(*it);
-        set_type(tp);
-
 
         Json::Value root;
         std::stringstream ss(_str);
@@ -99,7 +95,6 @@ namespace bp {
         } else if (root.isString()) {
             set_type(value_type::String);
         }
-
         val_ = parse_variant(root);
     };
 
