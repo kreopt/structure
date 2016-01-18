@@ -21,10 +21,10 @@ namespace bp {
                 sz = static_cast<size_block>(val->size());
                 r.append(reinterpret_cast<char *>(&sz), sizeof(size_block));
                 for (auto item: *val) {
-                    size_block key_size = static_cast<size_block >(sizeof(item.first.name));
+//                    size_block key_size = static_cast<size_block >(sizeof(item.first.name));
                     r.append(reinterpret_cast<const char *>(&item.first.hash), sizeof(symbol_t::hash_type));
-                    r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));
-                    r.append(reinterpret_cast<const char *>(&item.first.name), key_size);
+//                    r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));
+//                    r.append(reinterpret_cast<const char *>(&item.first.name), key_size);
                     r.append(create(item.second)->stringify<serializers::type::Dcm>());
                 }
                 break;
@@ -54,10 +54,11 @@ namespace bp {
                     r.append(val ? '\1' : '\0', 1);
                 } else if (is_symbol()) {
                     auto val = get_value<serializable::symbol_t>(val_);
-                    size_block key_size = static_cast<size_block >(sizeof(val.name));
+//                    size_block key_size = static_cast<size_block >(sizeof(val.name));
+//                    std::cout << val.hash << " " << val.name << std::endl;
                     r.append(reinterpret_cast<const char *>(&val.hash), sizeof(symbol_t::hash_type));
-                    r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));
-                    r.append(reinterpret_cast<const char *>(&val.name), key_size);
+//                    r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));
+//                    r.append(reinterpret_cast<const char *>(&val.name), key_size);
                 }
                 break;
             }
@@ -88,10 +89,11 @@ namespace bp {
                 for (int i = 0; i < sz; i++) {
                     symbol_t::hash_type hash = reinterpret_cast<const symbol_t::hash_type*>(&(*_it))[0];
                     _it+=sizeof(symbol_t::hash_type);
-                    size_block key_size = reinterpret_cast<const size_block*>(&(*_it))[0];
-                    _it+=sizeof(size_block);
-                    symbol_t key(std::string(_it, _it+key_size).c_str());
-                    _it += key_size;
+//                    size_block key_size = reinterpret_cast<const size_block*>(&(*_it))[0];
+//                    _it+=sizeof(size_block);
+//                    symbol_t key(std::string(_it, _it+key_size).c_str());
+//                    _it += key_size;
+                    symbol_t key(hash);
                     obj->emplace(key, parse_variant(_it));
                 }
                 return std::make_shared<serializer::variant_t>(obj);
@@ -125,7 +127,12 @@ namespace bp {
                 _it += 1;
                 return std::make_shared<serializer::variant_t>(obj);
             }
-
+            case serializer::value_type::Symbol: {
+                symbol_t sym(reinterpret_cast<const bp::symbol_t::hash_type *>(&(*_it))[0]);
+                serializer::value_ptr obj = std::make_shared<serializer::value>(sym);
+                _it += sizeof(bp::symbol_t::hash_type );
+                return std::make_shared<serializer::variant_t>(obj);
+            }
         }
     }
 
