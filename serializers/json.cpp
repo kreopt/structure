@@ -1,6 +1,7 @@
 #include <sstream>
 #include <json/json.h>
 #include "serializer.hpp"
+#include "json.hpp"
 
 namespace bp {
 
@@ -10,7 +11,7 @@ namespace bp {
         switch (tp) {
             case serializer::value_type::Object: {
                 for (auto item: root->keys()) {
-                    r[item.name]=build_json(root->at(item));
+                    r[item]=build_json(root->at(item));
                 }
                 break;
             }
@@ -40,7 +41,7 @@ namespace bp {
 
 
     template<>
-    std::string serializer::stringify<serializers::type::Json>() const {
+    std::string serializer::stringify<serializers::Json>() const {
         serializer::ptr root = std::const_pointer_cast<bp::serializer>(shared_from_this());
         return build_json(root).toStyledString();
     };
@@ -73,7 +74,7 @@ namespace bp {
     }
 
     template<>
-    void serializer::parse<serializers::type::Json>(const std::string &_str) {
+    void serializer::parse<serializers::Json>(const std::string &_str) {
         val_.reset();
 
         Json::Value root;

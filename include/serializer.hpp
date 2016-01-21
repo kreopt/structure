@@ -2,6 +2,7 @@
 #define BP_SERIALIZER_HPP
 
 #include <string>
+#include <iterator>
 #include <unordered_map>
 #include <boost/variant.hpp>
 #include <binelpro/symbol.hpp>
@@ -81,6 +82,7 @@ namespace bp {
             variant_t(const array_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<array_t>(_val)){}
             variant_t(array_t &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<array_t>(_val)){}
         };
+
     private:
         value_type value_type_ = value_type::Null;
 
@@ -199,40 +201,77 @@ namespace bp {
         serializer::ptr set(const std::initializer_list<variant_t> &_val) ;   // array
         serializer::ptr set(const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;   // object
 
-        //TODO: replace by iterator
-        inline std::vector<bp::symbol_t> keys() {
-            if (is_object()) {
-                std::vector<bp::symbol_t> keys;
-
-                for(auto kv : *get_variant<object_ptr>(val_)) {
-                    keys.push_back(kv.first);
-                }
-                return keys;
-            }
-            return {};
-        }
-
         //
 
-        template <serializers::type serializer_type>
+        template <symbol_t::hash_type serializer_type>
         std::string stringify() const {return std::string();};
 
-        template <serializers::type serializer_type>
+        template <symbol_t::hash_type serializer_type>
         void parse(const std::string &_str) {};
 
-        // TODO: iterators for objects and arrays
-
         static serializer::ptr create(variant_ptr _obj = nullptr);
-    };
 
-    template<>
-    std::string serializer::stringify<serializers::type::Json>() const;
-    template<>
-    void serializer::parse<serializers::type::Json>(const std::string &_str);
-    template<>
-    std::string serializer::stringify<serializers::type::Dcm>() const;
-    template<>
-    void serializer::parse<serializers::type::Dcm>(const std::string &_str);
+        // ITERATORS
+
+        class object_key_iterator : public std::iterator<std::input_iterator_tag, const char*> {
+            const serializer::ptr object_;
+            object_t::iterator    it;
+            object_t::iterator    end;
+        public:
+            object_key_iterator(const serializer::ptr &_object);
+            object_key_iterator(const object_key_iterator&_it);
+            object_key_iterator & operator++();
+            object_key_iterator operator++(int);
+            bool operator==(const object_key_iterator& rhs);
+            bool operator!=(const object_key_iterator& rhs);
+            const char * operator*();
+        };
+        class object_iterator : public std::iterator<std::forward_iterator_tag, serializer::ptr> {
+            const serializer::ptr object_;
+            object_t::iterator    it;
+            object_t::iterator    end;
+        public:
+            object_iterator(const serializer::ptr &_object);
+            object_iterator(const object_iterator&_it);
+            object_iterator & operator++();
+            object_iterator operator++(int);
+            bool operator==(const object_iterator& rhs);
+            bool operator!=(const object_iterator& rhs);
+            std::pair<bp::serializer::object_t::key_type, bp::serializer::ptr>  operator*();
+        };
+
+        class array_iterator : public std::iterator<std::random_access_iterator_tag, serializer::ptr> {
+            const serializer::ptr object_;
+            size_t  index;
+            size_t  size;
+        public:
+            array_iterator(const serializer::ptr &_object);
+            array_iterator(const array_iterator&_it);
+            array_iterator & operator++();
+            array_iterator operator++(int);
+            bool operator==(const array_iterator& rhs);
+            bool operator!=(const array_iterator& rhs);
+            bp::serializer::ptr  operator*();
+        };
+
+        template <typename iterator_type>
+        class iterable {
+            iterator_type it_;
+        public:
+            iterable(const iterator_type &_it) : it_(_it){}
+            iterable(const iterable &_it) : it_(_it.it_) {}
+            iterator_type begin() {return it_;}
+            iterator_type end() { return iterator_type(nullptr);}
+        };
+        template <typename iterator_type>
+        iterable<iterator_type> get_iterable() {
+            return iterable<iterator_type>(iterator_type(this->shared_from_this()));
+        }
+
+        iterable<object_key_iterator> keys() {return this->get_iterable<object_key_iterator>();}
+        iterable<object_iterator> as_object() {return this->get_iterable<object_iterator>();}
+        iterable<array_iterator> as_array() {return this->get_iterable<array_iterator>();}
+    };
 }
 
 

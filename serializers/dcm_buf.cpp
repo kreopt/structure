@@ -6,7 +6,7 @@ using size_block = uint32_t;
 namespace bp {
 
     template<>
-    std::string serializer::stringify<serializers::type::Dcm>() const {
+    std::string serializer::stringify<serializers::Dcm>() const {
         // entry ::= <type>[len]<data>;
         // object_entry ::= <key><val_entry>
 
@@ -25,7 +25,7 @@ namespace bp {
                     r.append(reinterpret_cast<const char *>(&item.first.hash), sizeof(symbol_t::hash_type));
 //                    r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));
 //                    r.append(reinterpret_cast<const char *>(&item.first.name), key_size);
-                    r.append(create(item.second)->stringify<serializers::type::Dcm>());
+                    r.append(create(item.second)->stringify<serializers::Dcm>());
                 }
                 break;
             }
@@ -33,7 +33,7 @@ namespace bp {
                 sz = static_cast<size_block>(this->size());
                 r.append(reinterpret_cast<char *>(&sz), sizeof(size_block));
                 for (int i = 0; i < sz; i++) {
-                    r.append(this->at(i)->stringify<serializers::type::Dcm>());
+                    r.append(this->at(i)->stringify<serializers::Dcm>());
                 }
                 break;
             }
@@ -137,7 +137,7 @@ namespace bp {
     }
 
     template<>
-    void serializer::parse<serializers::type::Dcm>(const std::string &_str) {
+    void serializer::parse<serializers::Dcm>(const std::string &_str) {
         val_.reset();
         auto it = _str.begin();
         value_type tp = static_cast<value_type >(*it);

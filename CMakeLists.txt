@@ -5,7 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 set(BUILD_JSON ON)
 set(BUILD_DCM ON)
 
-set(SOURCE_FILES main.cpp serializers/serializer.cpp include/serializer.hpp)
+set(SOURCE_FILES main.cpp serializers/serializer.cpp include/serializer.hpp serializers/serializer_iterators.cpp serializers/serializer_iterators.hpp)
 
 if (BUILD_JSON)
     set(JSON_SOURCES serializers/json.hpp serializers/json.cpp)
