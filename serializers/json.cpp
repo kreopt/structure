@@ -1,7 +1,7 @@
 #include <sstream>
 #include <json/json.h>
 #include "serializer.hpp"
-#include "json.hpp"
+#include "serializers/json.hpp"
 
 namespace bp {
 

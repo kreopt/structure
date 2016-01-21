@@ -1,6 +1,9 @@
 #ifndef SERIALIZERS_DCM_BUF_HPP
 #define SERIALIZERS_DCM_BUF_HPP
 
+#include <binelpro/symbol.hpp>
+#include "../serializer.hpp"
+
 namespace bp {
     namespace serializers {
         using namespace bp::literals;

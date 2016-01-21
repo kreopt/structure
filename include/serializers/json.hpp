@@ -2,6 +2,7 @@
 #define SERIALIZERS_JSON_HPP
 
 #include <binelpro/symbol.hpp>
+#include "../serializer.hpp"
 
 namespace bp {
     namespace serializers {
