@@ -19,28 +19,28 @@ find_package(BpUtil REQUIRED)
 
 include_directories(include)
 
-add_executable(serializers ${SOURCE_FILES} ${JSON_SOURCES} ${DCM_SOURCES})
+add_executable(serializers ${SOURCE_FILES})
 
-add_library(${PROJECT_NAME} SHARED serializers/serializer.cpp)
+add_library(${PROJECT_NAME} SHARED serializers/serializer.cpp serializers/serializer_iterators.cpp)
+target_link_libraries(${PROJECT_NAME} ${BPUTIL_LIBRARIES})
+
 
 if (BUILD_JSON)
     find_package(JsonCpp REQUIRED)
     add_library(${PROJECT_NAME}_json SHARED ${JSON_SOURCES})
-    target_link_libraries(${PROJECT_NAME}_json ${JSONCPP_LIBRARIES})
-    target_link_libraries(serializers  ${JSONCPP_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME}_json ${JSONCPP_LIBRARIES} ${PROJECT_NAME} )
     install(TARGETS ${PROJECT_NAME}_json DESTINATION lib/binelpro/)
-    target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_json)
     install(DIRECTORY include/ DESTINATION include/binelpro/ FILES_MATCHING PATTERN "serializers/json.hpp")
+    target_link_libraries(serializers ${PROJECT_NAME}_json)
 endif()
 
 if (BUILD_DCM)
     find_package(DcmIpc REQUIRED)
     add_library(${PROJECT_NAME}_dcmbuf SHARED ${DCM_SOURCES})
-    target_link_libraries(serializers  ${DCMIPC_LIBRARIES} ${BPUTIL_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME}_dcmbuf ${BPUTIL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME}_dcmbuf ${BPUTIL_LIBRARIES} ${PROJECT_NAME} )
     install(TARGETS ${PROJECT_NAME}_dcmbuf DESTINATION lib/binelpro/)
-    target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_dcmbuf)
     install(DIRECTORY include/ DESTINATION include/binelpro/ FILES_MATCHING PATTERN "serializers/dcm_buf.hpp")
+    target_link_libraries(serializers ${PROJECT_NAME}_dcmbuf)
 ENDIF()
 
 set(CMAKECONFIG_INSTALL_DIR "lib/cmake/bpserializers")
