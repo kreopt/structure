@@ -40,7 +40,7 @@ int main() {
     std::cout << "stringified" <<std::endl;
         auto ps = bp::serializer::create();
         ps->parse<bp::serializers::Dcm>(buf);
-        std::string buf1 = ps->stringify<bp::serializers::Dcm>();
+        std::string buf1 = ps->stringify<bp::serializers::Json>();
 //    }
     std::cout << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tp).count() << "mcs" << std::endl;
     std::cout << buf << std::endl;

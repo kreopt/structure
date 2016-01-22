@@ -25,10 +25,9 @@ bp::serializable::string_t bp::serializer::as_string() const {
 
 bp::serializable::int_t bp::serializer::as_int() const {
     switch (type()) {
-        case value_type::Int:
-        case value_type::Float:
-        case value_type::Bool:
-            return get_value<serializable::int_t>(val_);
+        case value_type::Int: return get_value<serializable::int_t>(val_);
+        case value_type::Float: return static_cast<serializable::int_t>(get_value<serializable::float_t>(val_));
+        case value_type::Bool: return static_cast<serializable::int_t>(get_value<serializable::bool_t>(val_));
         default:
             return 0;
     }
@@ -36,7 +35,7 @@ bp::serializable::int_t bp::serializer::as_int() const {
 
 bp::serializable::float_t bp::serializer::as_float() const {
     switch (type()) {
-        case value_type::Int:
+        case value_type::Int: return get_value<serializable::int_t>(val_);
         case value_type::Float:
             return get_value<serializable::float_t>(val_);
         default:
