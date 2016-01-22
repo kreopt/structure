@@ -54,7 +54,6 @@ namespace bp {
                 } else if (is_symbol()) {
                     auto val = get_value<serializable::symbol>(val_);
                     size_block key_size = static_cast<size_block >(val.name.size());
-                    std::cout << val.hash << " " << val.name << std::endl;
                     r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));
                     r.append(val.name);
                 }
