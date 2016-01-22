@@ -37,13 +37,14 @@ int main() {
 //    std::cout << s->get("s", ":(")->as_string() << std::endl;
 
         std::string buf = s->stringify<bp::serializers::Dcm>();
+    std::cout << "stringified" <<std::endl;
         auto ps = bp::serializer::create();
         ps->parse<bp::serializers::Dcm>(buf);
         std::string buf1 = ps->stringify<bp::serializers::Dcm>();
 //    }
     std::cout << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tp).count() << "mcs" << std::endl;
     std::cout << buf << std::endl;
-    std::cout << ps->get("cmd"_sym, ""_sym)->as_symbol().hash << std::endl;
+    std::cout << ps->get("cmd"_sym, ""_sym)->as_symbol().name << std::endl;
     std::cout << buf1 << std::endl;
 
     return 0;

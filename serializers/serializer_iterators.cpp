@@ -29,7 +29,7 @@ const char *bp::serializer::object_key_iterator::operator*() {
     if (!object_ || it==end) {
         return nullptr;
     }
-    return it->first.name;
+    return it->first;
 }
 
 bool bp::serializer::object_key_iterator::operator!=(const object_key_iterator& rhs) {

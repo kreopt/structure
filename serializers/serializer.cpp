@@ -18,7 +18,7 @@ bp::serializable::string_t bp::serializer::as_string() const {
         case value_type::Float:   return std::to_string(get_value<serializable::float_t>(val_));
         case value_type::Bool:    return std::to_string(get_value<serializable::bool_t>(val_));
         case value_type::String:  return get_value<std::string>(val_);
-        case value_type::Symbol:  return std::string(get_value<serializable::symbol_t>(val_).name);
+        case value_type::Symbol:  return std::string(get_value<serializable::symbol>(val_).name);
         default: return "";
     }
 }
@@ -55,10 +55,10 @@ bp::serializable::bool_t bp::serializer::as_bool() const {
     }
 }
 
-bp::serializable::symbol_t bp::serializer::as_symbol() const {
+bp::serializable::symbol bp::serializer::as_symbol() const {
     switch (type()) {
         case value_type::Symbol:
-            return get_value<serializable::symbol_t>(val_);
+            return get_value<serializable::symbol>(val_);
         default:
             return ""_sym;
     }
@@ -148,7 +148,7 @@ const bp::serializer::ptr bp::serializer::at(const std::string &_key) const {
     return at(bp::symbol(_key));
 }
 
-bp::serializer::ptr bp::serializer::at(const bp::symbol_t &_key) {
+bp::serializer::ptr bp::serializer::at(const bp::symbol &_key) {
     if (type() == value_type::Object) {
         return create(get_variant<object_ptr>(val_)->at(_key));
     } else {
@@ -156,7 +156,7 @@ bp::serializer::ptr bp::serializer::at(const bp::symbol_t &_key) {
     }
 }
 
-const bp::serializer::ptr bp::serializer::at(const bp::symbol_t &_key) const {
+const bp::serializer::ptr bp::serializer::at(const bp::symbol &_key) const {
     if (type() == value_type::Object) {
         return create(get_variant<object_ptr>(val_)->at(_key));
     } else {
@@ -164,7 +164,7 @@ const bp::serializer::ptr bp::serializer::at(const bp::symbol_t &_key) const {
     }
 }
 
-bool bp::serializer::emplace(const bp::symbol_t &_key, const bp::serializer::variant_t &_val) {
+bool bp::serializer::emplace(const bp::symbol &_key, const bp::serializer::variant_t &_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(_val)).second;
@@ -173,7 +173,7 @@ bool bp::serializer::emplace(const bp::symbol_t &_key, const bp::serializer::var
     }
 }
 
-bool bp::serializer::emplace(const bp::symbol_t &_key, bp::serializer::variant_t &&_val) {
+bool bp::serializer::emplace(const bp::symbol &_key, bp::serializer::variant_t &&_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(_val)).second;
@@ -182,7 +182,7 @@ bool bp::serializer::emplace(const bp::symbol_t &_key, bp::serializer::variant_t
     }
 }
 
-bool bp::serializer::emplace(const bp::symbol_t &_key, const std::initializer_list<variant_t> &_val) {
+bool bp::serializer::emplace(const bp::symbol &_key, const std::initializer_list<variant_t> &_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         array_ptr obj = std::make_shared<array_t>();
@@ -195,8 +195,8 @@ bool bp::serializer::emplace(const bp::symbol_t &_key, const std::initializer_li
     }
 }
 
-bool bp::serializer::emplace(const bp::symbol_t &_key,
-                             const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) {
+bool bp::serializer::emplace(const bp::symbol &_key,
+                             const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         object_ptr obj = std::make_shared<object_t>();
@@ -209,7 +209,7 @@ bool bp::serializer::emplace(const bp::symbol_t &_key,
     }
 }
 
-bool bp::serializer::emplace(bp::symbol_t &&_key, const bp::serializer::variant_t &_val) {
+bool bp::serializer::emplace(bp::symbol &&_key, const bp::serializer::variant_t &_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(_val)).second;
@@ -218,7 +218,7 @@ bool bp::serializer::emplace(bp::symbol_t &&_key, const bp::serializer::variant_
     }
 }
 
-bool bp::serializer::emplace(bp::symbol_t &&_key, bp::serializer::variant_t &&_val) {
+bool bp::serializer::emplace(bp::symbol &&_key, bp::serializer::variant_t &&_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(_val)).second;
@@ -227,7 +227,7 @@ bool bp::serializer::emplace(bp::symbol_t &&_key, bp::serializer::variant_t &&_v
     }
 }
 
-bool bp::serializer::emplace(bp::symbol_t &&_key, const std::initializer_list<variant_t> &_val) {
+bool bp::serializer::emplace(bp::symbol &&_key, const std::initializer_list<variant_t> &_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         array_ptr obj = std::make_shared<array_t>();
@@ -240,8 +240,8 @@ bool bp::serializer::emplace(bp::symbol_t &&_key, const std::initializer_list<va
     }
 }
 
-bool bp::serializer::emplace(bp::symbol_t &&_key,
-                             const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) {
+bool bp::serializer::emplace(bp::symbol &&_key,
+                             const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
         object_ptr obj = std::make_shared<object_t>();
@@ -267,7 +267,7 @@ bool bp::serializer::emplace(const char *_key, const std::initializer_list<varia
 }
 
 bool bp::serializer::emplace(const char *_key,
-                             const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) {
+                             const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) {
     return emplace(bp::symbol(_key), _val);
 }
 
@@ -284,11 +284,11 @@ bool bp::serializer::emplace(const std::string &_key, const std::initializer_lis
 }
 
 bool bp::serializer::emplace(const std::string &_key,
-                             const std::initializer_list<std::pair<bp::symbol_t, variant_t>> &_val) {
+                             const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) {
     return emplace(bp::symbol(_key), _val);
 }
 
-bp::serializer::ptr bp::serializer::get(const bp::symbol_t &_key,
+bp::serializer::ptr bp::serializer::get(const bp::symbol &_key,
                                         const bp::serializer::variant_t &_default) const {
     if (type() == value_type::Object) {
         try {
@@ -302,7 +302,7 @@ bp::serializer::ptr bp::serializer::get(const bp::symbol_t &_key,
     }
 }
 
-bp::serializer::ptr bp::serializer::get(const bp::symbol_t &_key,
+bp::serializer::ptr bp::serializer::get(const bp::symbol &_key,
                                         bp::serializer::variant_t &&_default) const {
     if (type() == value_type::Object) {
         try {
