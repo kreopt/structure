@@ -78,8 +78,12 @@ namespace bp {
         val_.reset();
 
         Json::Value root;
-        std::stringstream ss(_str);
-        ss >> root;
+        try {
+            std::stringstream ss(_str);
+            ss >> root;
+        } catch (Json::Exception &_e) {
+            throw bp::serializer::parse_exception(_e.what());
+        }
 
         if (root.isArray()) {
             set_type(value_type::Array);
@@ -96,7 +100,11 @@ namespace bp {
         } else if (root.isString()) {
             set_type(value_type::String);
         }
-        val_ = parse_variant(root);
+        try {
+            val_ = parse_variant(root);
+        } catch (std::exception &_e) {
+            throw bp::serializer::parse_exception(_e.what());
+        }
     };
 
 }

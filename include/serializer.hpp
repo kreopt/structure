@@ -226,6 +226,8 @@ namespace bp {
             bool operator!=(const object_key_iterator& rhs);
             const char * operator*();
         };
+
+        // TODO: methods to conform forward iterator interface
         class object_iterator : public std::iterator<std::forward_iterator_tag, serializer::ptr> {
             const serializer::ptr object_;
             object_t::iterator    it;
@@ -238,8 +240,13 @@ namespace bp {
             bool operator==(const object_iterator& rhs);
             bool operator!=(const object_iterator& rhs);
             std::pair<bp::serializer::object_t::key_type, bp::serializer::ptr>  operator*();
+
+            /////
+//            reference operator*() const;
+//            object_iterator operator++(int);
         };
 
+        // TODO: methods to conform random access iterator interface
         class array_iterator : public std::iterator<std::random_access_iterator_tag, serializer::ptr> {
             const serializer::ptr object_;
             size_t  index;
@@ -252,8 +259,26 @@ namespace bp {
             bool operator==(const array_iterator& rhs);
             bool operator!=(const array_iterator& rhs);
             bp::serializer::ptr  operator*();
+
+            /////
+//            array_iterator& operator--(); //prefix increment
+//            array_iterator operator--(int); //postfix decrement
+//            friend bool operator<(const array_iterator&, const array_iterator&);
+//            friend bool operator>(const array_iterator&, const array_iterator&);
+//            friend bool operator<=(const array_iterator&, const array_iterator&);
+//            friend bool operator>=(const array_iterator&, const array_iterator&);
+//
+//            array_iterator& operator+=(size_t);
+//            friend array_iterator operator+(const array_iterator&, size_t);
+//            friend array_iterator operator+(size_t, const array_iterator&);
+//            array_iterator& operator-=(size_t);
+//            friend array_iterator operator-(const array_iterator&, size_t);
+//            friend difference_type operator-(array_iterator, array_iterator);
+//
+//            reference operator[](size_t) const;
         };
 
+    private:
         template <typename iterator_type>
         class iterable {
             iterator_type it_;
@@ -267,10 +292,22 @@ namespace bp {
         iterable<iterator_type> get_iterable() {
             return iterable<iterator_type>(iterator_type(this->shared_from_this()));
         }
+    public:
 
         iterable<object_key_iterator> keys() {return this->get_iterable<object_key_iterator>();}
         iterable<object_iterator> as_object() {return this->get_iterable<object_iterator>();}
         iterable<array_iterator> as_array() {return this->get_iterable<array_iterator>();}
+
+        // EXCEPTIONS
+
+        class serializer_exception : public std::runtime_error {
+        public:
+            serializer_exception(const char* _msg) : std::runtime_error(_msg){}
+        };
+        class parse_exception : public serializer_exception {
+        public:
+            parse_exception(const char* _msg) : serializer_exception(_msg){}
+        };
     };
 }
 

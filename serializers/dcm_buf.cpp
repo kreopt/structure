@@ -142,6 +142,10 @@ namespace bp {
         auto it = _str.begin();
         value_type tp = static_cast<value_type >(*it);
         set_type(tp);
-        val_ = parse_variant(it);
+        try {
+            val_ = parse_variant(it);
+        } catch (std::exception &_e) {
+            throw bp::serializer::parse_exception(_e.what());
+        }
     };
 }
