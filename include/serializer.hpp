@@ -74,6 +74,9 @@ namespace bp {
             variant_t(object_t &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<object_t>(_val)){}
             variant_t(const array_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<array_t>(_val)){}
             variant_t(array_t &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<array_t>(_val)){}
+
+//            variant_t(const variant_t &_var): boost::variant<value_ptr, object_ptr, array_ptr>(_var){}
+//            variant_t(variant_t &&_var): boost::variant<value_ptr, object_ptr, array_ptr>(_var){}
         };
 
     private:
@@ -120,7 +123,6 @@ namespace bp {
 
             value_type operator()(array_ptr _val) const { return value_type::Array; }
         };
-
         template <typename V, class = typename std::enable_if<bp::is_any_of<V, array_ptr, object_ptr, value_ptr>::value>::type>
         V get_variant(variant_ptr _val) const {
             return boost::get<V>(*_val);
@@ -131,6 +133,11 @@ namespace bp {
             return boost::get<V>(*get_variant<value_ptr>(_val));
         }
     public:
+        operator variant_t() {
+            return *val_;
+        }
+
+
         serializable::string_t  as_string() const;
         serializable::int_t     as_int() const;
         serializable::float_t   as_float() const;
