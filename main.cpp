@@ -1,6 +1,6 @@
 #include <iostream>
 #include <chrono>
-#include "serializer.hpp"
+#include "structure.hpp"
 #include "serializers/json.hpp"
 #include "serializers/dcm_buf.hpp"
 
@@ -10,7 +10,7 @@ using namespace bp::literals;
 int main() {
     auto tp = std::chrono::high_resolution_clock::now();
 //    for (int i=0; i<1000; i++) {
-        auto s = bp::serializer::create();
+        auto s = bp::structure::create();
 
             s->emplace("cmd"_sym, "caps"_sym);
         s->emplace("i", 1);
@@ -38,7 +38,7 @@ int main() {
 
         std::string buf = s->stringify<bp::serializers::Dcm>();
     std::cout << "stringified" <<std::endl;
-        auto ps = bp::serializer::create();
+        auto ps = bp::structure::create();
         ps->parse<bp::serializers::Dcm>(buf);
         std::string buf1 = ps->stringify<bp::serializers::Json>();
 //    }

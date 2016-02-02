@@ -1,21 +1,21 @@
 #include <sstream>
 #include <json/json.h>
-#include "serializer.hpp"
+#include "structure.hpp"
 #include "serializers/json.hpp"
 
 namespace bp {
 
-    Json::Value build_json(serializer::ptr root) {
+    Json::Value build_json(structure::ptr root) {
         Json::Value r;
         auto tp = root->type();
         switch (tp) {
-            case serializer::value_type::Object: {
+            case structure::value_type::Object: {
                 for (auto item: root->keys()) {
                     r[item]=build_json(root->at(item));
                 }
                 break;
             }
-            case serializer::value_type::Array: {
+            case structure::value_type::Array: {
                 for (int i=0; i<root->size(); ++i) {
                     r.append(build_json(root->at(i)));
                 }
@@ -41,40 +41,40 @@ namespace bp {
 
 
     template<>
-    std::string serializer::stringify<serializers::Json>() const {
-        serializer::ptr root = std::const_pointer_cast<bp::serializer>(shared_from_this());
+    std::string structure::stringify<serializers::Json>() const {
+        structure::ptr root = std::const_pointer_cast<bp::structure>(shared_from_this());
         return build_json(root).toStyledString();
     };
 
-    serializer::variant_ptr parse_variant(const Json::Value &root) {
+    structure::variant_ptr parse_variant(const Json::Value &root) {
 
         if (root.isArray()) {
-            bp::serializer::array_t arr;
+            bp::structure::array_t arr;
             for (int i = root.size()-1; i>=0; --i) {
                 arr.push_back(parse_variant(root[i]));
             }
-            return std::make_shared<bp::serializer::variant_t>(arr);
+            return std::make_shared<bp::structure::variant_t>(arr);
         } else if (root.isObject()) {
-            bp::serializer::object_t obj;
+            bp::structure::object_t obj;
             for (auto key: root.getMemberNames()) {
                 obj.emplace(bp::symbol(key), parse_variant(root[key]));
             }
-            return std::make_shared<bp::serializer::variant_t>(obj);
+            return std::make_shared<bp::structure::variant_t>(obj);
         } else if (root.isBool()) {
-            return std::make_shared<bp::serializer::variant_t>(root.asBool());
+            return std::make_shared<bp::structure::variant_t>(root.asBool());
         } else if (root.isDouble()) {
-            return std::make_shared<bp::serializer::variant_t>(root.asDouble());
+            return std::make_shared<bp::structure::variant_t>(root.asDouble());
         } else if (root.isIntegral()) {
-            return std::make_shared<bp::serializer::variant_t>(static_cast<serializable::int_t>(root.asLargestInt()));
+            return std::make_shared<bp::structure::variant_t>(static_cast<serializable::int_t>(root.asLargestInt()));
         } else if (root.isNull()) {
-            return std::make_shared<bp::serializer::variant_t>(0);
+            return std::make_shared<bp::structure::variant_t>(0);
         } else if (root.isString()) {
-            return std::make_shared<bp::serializer::variant_t>(root.asString());
+            return std::make_shared<bp::structure::variant_t>(root.asString());
         }
     }
 
     template<>
-    void serializer::parse<serializers::Json>(const std::string &_str) {
+    void structure::parse<serializers::Json>(const std::string &_str) {
         val_.reset();
 
         Json::Value root;
@@ -82,7 +82,7 @@ namespace bp {
             std::stringstream ss(_str);
             ss >> root;
         } catch (Json::Exception &_e) {
-            throw bp::serializer::parse_exception(_e.what());
+            throw bp::structure::parse_error(_e.what());
         }
 
         if (root.isArray()) {
@@ -103,7 +103,7 @@ namespace bp {
         try {
             val_ = parse_variant(root);
         } catch (std::exception &_e) {
-            throw bp::serializer::parse_exception(_e.what());
+            throw bp::structure::parse_error(_e.what());
         }
     };
 

@@ -1,4 +1,4 @@
-#include "serializer.hpp"
+#include "structure.hpp"
 #include "serializers/dcm_buf.hpp"
 
 using size_block = uint32_t;
@@ -6,7 +6,7 @@ using size_block = uint32_t;
 namespace bp {
 
     template<>
-    std::string serializer::stringify<serializers::Dcm>() const {
+    std::string structure::stringify<serializers::Dcm>() const {
         // entry ::= <type>[len]<data>;
         // object_entry ::= <key><val_entry>
 
@@ -63,17 +63,17 @@ namespace bp {
         return r;
     };
 
-    serializer::variant_ptr parse_variant(std::string::const_iterator &_it) {
+    structure::variant_ptr parse_variant(std::string::const_iterator &_it) {
 
-        serializer::value_type tp = static_cast<serializer::value_type >(_it[0]);
+        structure::value_type tp = static_cast<structure::value_type >(_it[0]);
         size_block sz;
         _it++;
 
         switch (tp) {
-            case serializer::value_type::Object:
-            case serializer::value_type::Array:
-            case serializer::value_type::String:
-            case serializer::value_type::Symbol:
+            case structure::value_type::Object:
+            case structure::value_type::Array:
+            case structure::value_type::String:
+            case structure::value_type::Symbol:
                 sz = reinterpret_cast<const size_block *>(&(*_it))[0];
                 _it += sizeof(size_block);
                 break;
@@ -82,8 +82,8 @@ namespace bp {
         }
 
         switch (tp) {
-            case serializer::value_type::Object: {
-                serializer::object_ptr obj = std::make_shared<serializer::object_t>();
+            case structure::value_type::Object: {
+                structure::object_ptr obj = std::make_shared<structure::object_t>();
                 for (int i = 0; i < sz; i++) {
                     size_block key_size = reinterpret_cast<const size_block*>(&(*_it))[0];
                     _it+=sizeof(size_block);
@@ -91,48 +91,48 @@ namespace bp {
                     _it += key_size;
                     obj->emplace(key, parse_variant(_it));
                 }
-                return std::make_shared<serializer::variant_t>(obj);
+                return std::make_shared<structure::variant_t>(obj);
             }
-            case serializer::value_type::Array: {
-                serializer::array_ptr obj = std::make_shared<serializer::array_t>();
+            case structure::value_type::Array: {
+                structure::array_ptr obj = std::make_shared<structure::array_t>();
                 for (int i = 0; i < sz; i++) {
                     obj->emplace_back(parse_variant(_it));
                 }
-                return std::make_shared<serializer::variant_t>(obj);
+                return std::make_shared<structure::variant_t>(obj);
             }
-            case serializer::value_type::String: {
-                serializer::value_ptr obj = std::make_shared<serializer::value>(std::string(_it, _it + sz));
+            case structure::value_type::String: {
+                structure::value_ptr obj = std::make_shared<structure::value>(std::string(_it, _it + sz));
                 _it += sz;
-                return std::make_shared<serializer::variant_t>(obj);
+                return std::make_shared<structure::variant_t>(obj);
             }
-            case serializer::value_type::Int: {
-                serializer::value_ptr obj = std::make_shared<serializer::value>(
+            case structure::value_type::Int: {
+                structure::value_ptr obj = std::make_shared<structure::value>(
                         reinterpret_cast<const serializable::int_t *>(&(*_it))[0]);
                 _it += sizeof(serializable::int_t);
-                return std::make_shared<serializer::variant_t>(obj);
+                return std::make_shared<structure::variant_t>(obj);
             }
-            case serializer::value_type::Float: {
-                serializer::value_ptr obj = std::make_shared<serializer::value>(
+            case structure::value_type::Float: {
+                structure::value_ptr obj = std::make_shared<structure::value>(
                         reinterpret_cast<const serializable::float_t *>(&(*_it))[0]);
                 _it += sizeof(serializable::float_t);
-                return std::make_shared<serializer::variant_t>(obj);
+                return std::make_shared<structure::variant_t>(obj);
             }
-            case serializer::value_type::Bool: {
-                serializer::value_ptr obj = std::make_shared<serializer::value>(*_it ? true : false);
+            case structure::value_type::Bool: {
+                structure::value_ptr obj = std::make_shared<structure::value>(*_it ? true : false);
                 _it += 1;
-                return std::make_shared<serializer::variant_t>(obj);
+                return std::make_shared<structure::variant_t>(obj);
             }
-            case serializer::value_type::Symbol: {
+            case structure::value_type::Symbol: {
                 symbol key(std::string(_it, _it+sz));
                 _it += sz;
-                serializer::value_ptr obj = std::make_shared<serializer::value>(key);
-                return std::make_shared<serializer::variant_t>(obj);
+                structure::value_ptr obj = std::make_shared<structure::value>(key);
+                return std::make_shared<structure::variant_t>(obj);
             }
         }
     }
 
     template<>
-    void serializer::parse<serializers::Dcm>(const std::string &_str) {
+    void structure::parse<serializers::Dcm>(const std::string &_str) {
         val_.reset();
         auto it = _str.begin();
         value_type tp = static_cast<value_type >(*it);
@@ -140,7 +140,7 @@ namespace bp {
         try {
             val_ = parse_variant(it);
         } catch (std::exception &_e) {
-            throw bp::serializer::parse_exception(_e.what());
+            throw bp::structure::parse_error(_e.what());
         }
     };
 }

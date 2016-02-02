@@ -2,7 +2,7 @@
 #define SERIALIZERS_DCM_BUF_HPP
 
 #include <binelpro/symbol.hpp>
-#include "../serializer.hpp"
+#include "../structure.hpp"
 
 namespace bp {
     namespace serializers {
@@ -10,9 +10,9 @@ namespace bp {
         constexpr symbol::hash_type Dcm = "dcm"_hash;
     }
     template<>
-    std::string serializer::stringify<serializers::Dcm>() const;
+    std::string structure::stringify<serializers::Dcm>() const;
     template<>
-    void serializer::parse<serializers::Dcm>(const std::string &_str);
+    void structure::parse<serializers::Dcm>(const std::string &_str);
 }
 
 #endif //SERIALIZERS_DCM_BUF_HPP

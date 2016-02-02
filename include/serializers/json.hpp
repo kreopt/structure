@@ -2,7 +2,7 @@
 #define SERIALIZERS_JSON_HPP
 
 #include <binelpro/symbol.hpp>
-#include "../serializer.hpp"
+#include "../structure.hpp"
 
 namespace bp {
     namespace serializers {
@@ -10,8 +10,8 @@ namespace bp {
         constexpr symbol::hash_type Json = "json"_hash;
     }
     template<>
-    std::string serializer::stringify<serializers::Json>() const;
+    std::string structure::stringify<serializers::Json>() const;
     template<>
-    void serializer::parse<serializers::Json>(const std::string &_str);
+    void structure::parse<serializers::Json>(const std::string &_str);
 }
 #endif //SERIALIZERS_JSON_HPP

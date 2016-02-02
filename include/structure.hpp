@@ -19,9 +19,9 @@ namespace bp {
         using string_t = std::string;
     }
 
-    class serializer : public std::enable_shared_from_this<serializer>{
+    class structure : public std::enable_shared_from_this<structure>{
     public:
-        using ptr = std::shared_ptr<serializer>;
+        using ptr = std::shared_ptr<structure>;
 
         enum class value_type: char {
             Int = 'i',
@@ -82,7 +82,7 @@ namespace bp {
     private:
         value_type value_type_ = value_type::Null;
 
-        void initialize_if_null(bp::serializer::value_type _type);
+        void initialize_if_null(bp::structure::value_type _type);
 
         template <typename V, class = typename std::enable_if<bp::is_any_of<V, array_t, object_t>::value>::type>
         void initialize_val() {
@@ -93,7 +93,7 @@ namespace bp {
             }
         }
 
-        serializer(bp::serializer::variant_ptr _obj = nullptr);
+        structure(bp::structure::variant_ptr _obj = nullptr);
     protected:
         variant_ptr val_;
 
@@ -110,7 +110,7 @@ namespace bp {
             value_type operator()(const serializable::string_t & _val) const { return value_type::String; }
             value_type operator()(serializable::string_t && _val) const { return value_type::String; }
         };
-        struct variant_visitor : public boost::static_visitor<bp::serializer::value_type> {
+        struct variant_visitor : public boost::static_visitor<bp::structure::value_type> {
             value_type operator()(value_ptr _val) const {
                 if (_val) {
                     return boost::apply_visitor(value_type_visitor(), *_val);
@@ -157,20 +157,20 @@ namespace bp {
 
         // arrays:
         size_t size() const;
-        serializer::ptr at(int index);
-        const serializer::ptr at(int index) const;
+        structure::ptr at(int index);
+        const structure::ptr at(int index) const;
         void append(const variant_t &_val);
         void append(variant_t &&_val);
         bool append(const std::initializer_list<variant_t> &_val);
         bool append(const std::initializer_list<std::pair<std::string, variant_t>> &_val);
 
         // objects:
-        serializer::ptr at(const char *_key);
-        const serializer::ptr at(const char *_key) const;
-        serializer::ptr at(const std::string &_key);
-        const serializer::ptr at(const std::string &_key) const;
-        serializer::ptr at(const symbol &_key);
-        const serializer::ptr at(const symbol &_key) const;
+        structure::ptr at(const char *_key);
+        const structure::ptr at(const char *_key) const;
+        structure::ptr at(const std::string &_key);
+        const structure::ptr at(const std::string &_key) const;
+        structure::ptr at(const symbol &_key);
+        const structure::ptr at(const symbol &_key) const;
 
         bool emplace(const std::string &_key, const variant_t &_val) ;
         bool emplace(const std::string &_key, variant_t &&_val) ;
@@ -189,17 +189,17 @@ namespace bp {
         bool emplace(const char* _key, const std::initializer_list<variant_t> &_val) ;
         bool emplace(const char* _key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
 
-        serializer::ptr get(const std::string &_key, const variant_t &_default) const ;
-        serializer::ptr get(const std::string &_key, variant_t &&_default) const ;
-        serializer::ptr get(const symbol &_key, const variant_t &_default) const ;
-        serializer::ptr get(const symbol &_key, variant_t &&_default) const ;
-        serializer::ptr get(const char* _key, const variant_t &_default) const ;
-        serializer::ptr get(const char* _key, variant_t &&_default) const ;
+        structure::ptr get(const std::string &_key, const variant_t &_default) const ;
+        structure::ptr get(const std::string &_key, variant_t &&_default) const ;
+        structure::ptr get(const symbol &_key, const variant_t &_default) const ;
+        structure::ptr get(const symbol &_key, variant_t &&_default) const ;
+        structure::ptr get(const char* _key, const variant_t &_default) const ;
+        structure::ptr get(const char* _key, variant_t &&_default) const ;
 
-        serializer::ptr set(variant_t &&_val) ;
-        serializer::ptr set(const variant_t &_val) ;  // atom
-        serializer::ptr set(const std::initializer_list<variant_t> &_val) ;   // array
-        serializer::ptr set(const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;   // object
+        structure::ptr set(variant_t &&_val) ;
+        structure::ptr set(const variant_t &_val) ;  // atom
+        structure::ptr set(const std::initializer_list<variant_t> &_val) ;   // array
+        structure::ptr set(const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;   // object
 
         //
 
@@ -209,16 +209,16 @@ namespace bp {
         template <symbol::hash_type serializer_type>
         void parse(const std::string &_str) {};
 
-        static serializer::ptr create(variant_ptr _obj = nullptr);
+        static structure::ptr create(variant_ptr _obj = nullptr);
 
         // ITERATORS
 
         class object_key_iterator : public std::iterator<std::input_iterator_tag, const char*> {
-            const serializer::ptr object_;
+            const structure::ptr object_;
             object_t::iterator    it;
             object_t::iterator    end;
         public:
-            object_key_iterator(const serializer::ptr &_object);
+            object_key_iterator(const structure::ptr &_object);
             object_key_iterator(const object_key_iterator&_it);
             object_key_iterator & operator++();
             object_key_iterator operator++(int);
@@ -228,18 +228,18 @@ namespace bp {
         };
 
         // TODO: methods to conform forward iterator interface
-        class object_iterator : public std::iterator<std::forward_iterator_tag, serializer::ptr> {
-            const serializer::ptr object_;
+        class object_iterator : public std::iterator<std::forward_iterator_tag, structure::ptr> {
+            const structure::ptr object_;
             object_t::iterator    it;
             object_t::iterator    end;
         public:
-            object_iterator(const serializer::ptr &_object);
+            object_iterator(const structure::ptr &_object);
             object_iterator(const object_iterator&_it);
             object_iterator & operator++();
             object_iterator operator++(int);
             bool operator==(const object_iterator& rhs);
             bool operator!=(const object_iterator& rhs);
-            std::pair<bp::serializer::object_t::key_type, bp::serializer::ptr>  operator*();
+            std::pair<bp::structure::object_t::key_type, bp::structure::ptr>  operator*();
 
             /////
 //            reference operator*() const;
@@ -247,18 +247,18 @@ namespace bp {
         };
 
         // TODO: methods to conform random access iterator interface
-        class array_iterator : public std::iterator<std::random_access_iterator_tag, serializer::ptr> {
-            const serializer::ptr object_;
+        class array_iterator : public std::iterator<std::random_access_iterator_tag, structure::ptr> {
+            const structure::ptr object_;
             size_t  index;
             size_t  size;
         public:
-            array_iterator(const serializer::ptr &_object);
+            array_iterator(const structure::ptr &_object);
             array_iterator(const array_iterator&_it);
             array_iterator & operator++();
             array_iterator operator++(int);
             bool operator==(const array_iterator& rhs);
             bool operator!=(const array_iterator& rhs);
-            bp::serializer::ptr  operator*();
+            bp::structure::ptr  operator*();
 
             /////
 //            array_iterator& operator--(); //prefix increment
@@ -300,13 +300,13 @@ namespace bp {
 
         // EXCEPTIONS
 
-        class serializer_exception : public std::runtime_error {
+        class structure_error : public std::runtime_error {
         public:
-            serializer_exception(const char* _msg) : std::runtime_error(_msg){}
+            structure_error(const char* _msg) : std::runtime_error(_msg){}
         };
-        class parse_exception : public serializer_exception {
+        class parse_error : public structure_error {
         public:
-            parse_exception(const char* _msg) : serializer_exception(_msg){}
+            parse_error(const char* _msg) : structure_error(_msg){}
         };
     };
 }
