@@ -172,6 +172,7 @@ namespace bp {
         structure::ptr at(const symbol &_key);
         const structure::ptr at(const symbol &_key) const;
 
+
         bool emplace(const std::string &_key, const variant_t &_val) ;
         bool emplace(const std::string &_key, variant_t &&_val) ;
         bool emplace(const std::string &_key, const std::initializer_list<variant_t> &_val) ;
@@ -210,6 +211,13 @@ namespace bp {
         void parse(const std::string &_str) {};
 
         static structure::ptr create(variant_ptr _obj = nullptr);
+
+        template <symbol::hash_type serializer_type>
+        static structure::ptr create_from_string(const std::string &_s){
+            auto structure = create();
+            structure->parse<serializer_type>(_s);
+            return structure;
+        };
 
         // ITERATORS
 
