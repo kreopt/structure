@@ -59,7 +59,7 @@ namespace bp {
             variant_t(const serializable::bool_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<value>(_val)) { }
             variant_t(const serializable::symbol &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<value>(_val)) { }
             variant_t(const serializable::string_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<value>(_val)) { }
-            variant_t(const char* _val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<value>(std::string(_val))) { }
+            variant_t(const char* _val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val?std::make_shared<value>(std::string(_val)):nullptr) { }
 
             variant_t(const value_ptr &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
             variant_t(value_ptr &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
@@ -177,11 +177,11 @@ namespace bp {
         bool emplace(const std::string &_key, variant_t &&_val) ;
         bool emplace(const std::string &_key, const std::initializer_list<variant_t> &_val) ;
         bool emplace(const std::string &_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
-        bool emplace(const symbol &_key, const variant_t &_val) ;
+        bool emplace(const symbol &_key, const variant_t &_val = nullptr) ;
         bool emplace(const symbol &_key, variant_t &&_val) ;
         bool emplace(const symbol &_key, const std::initializer_list<variant_t> &_val) ;
         bool emplace(const symbol &_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
-        bool emplace(symbol &&_key, const variant_t &_val) ;
+        bool emplace(symbol &&_key, const variant_t &_val = nullptr) ;
         bool emplace(symbol &&_key, variant_t &&_val) ;
         bool emplace(symbol &&_key, const std::initializer_list<variant_t> &_val) ;
         bool emplace(symbol &&_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
@@ -189,12 +189,26 @@ namespace bp {
         bool emplace(const char* _key, variant_t &&_val) ;
         bool emplace(const char* _key, const std::initializer_list<variant_t> &_val) ;
         bool emplace(const char* _key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
+        bool emplace(symbol &&_key, const bp::structure::ptr & _ptr) {
+            if (_ptr) {
+                return emplace(std::forward<symbol>(_key), *_ptr);
+            } else  {
+                return emplace(std::forward<symbol>(_key));
+            }
+        }
+        bool emplace(const symbol &_key, const bp::structure::ptr & _ptr) {
+            if (_ptr) {
+                return emplace(_key, *_ptr);
+            } else  {
+                return emplace(_key);
+            }
+        }
 
-        structure::ptr get(const std::string &_key, const variant_t &_default) const ;
+        structure::ptr get(const std::string &_key, const variant_t &_default=nullptr) const ;
         structure::ptr get(const std::string &_key, variant_t &&_default) const ;
-        structure::ptr get(const symbol &_key, const variant_t &_default) const ;
+        structure::ptr get(const symbol &_key, const variant_t &_default=nullptr) const ;
         structure::ptr get(const symbol &_key, variant_t &&_default) const ;
-        structure::ptr get(const char* _key, const variant_t &_default) const ;
+        structure::ptr get(const char* _key, const variant_t &_default=nullptr) const ;
         structure::ptr get(const char* _key, variant_t &&_default) const ;
 
         structure::ptr set(variant_t &&_val) ;
