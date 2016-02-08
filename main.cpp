@@ -18,7 +18,11 @@ int main() {
                                                }}
                                        }*/);
 
-//            s->emplace("cmd"_sym, "caps"_sym);
+        s->emplace("event"_sym, "caps"_sym);
+    s->emplace("data"_sym, {
+            {"mount"_sym, "dd"},
+            {"caps"_sym, "cc"},
+            {"endpoint"_sym, "ep"}});
 //        s->emplace("i", 1);
 //        s->emplace("s", "string");
 //        s->emplace("b", true);
@@ -27,9 +31,7 @@ int main() {
 //        s->at("a")->append(39);
 //        s->emplace("o", {{"aa", 1}, {"bb", 1}});
 
-    std::string buf = s->stringify<bp::serializers::Json>();
-    s->emplace("a", nullptr);
-    buf = s->stringify<bp::serializers::Json>();
+    std::string buf = s->stringify<bp::serializers::Dcm>();
     std::cout << buf <<std::endl << static_cast<char>(s->get("d")->type()) << std::endl;
 //
 //    for (const auto key: s->keys()) {

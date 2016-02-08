@@ -20,6 +20,7 @@ namespace bp {
                 auto val = get_variant<object_ptr>(val_);
                 sz = static_cast<size_block>(val->size());
                 r.append(reinterpret_cast<char *>(&sz), sizeof(size_block));
+
                 for (auto item: *val) {
                     size_block key_size = static_cast<size_block >(item.first.name.size());
                     r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));

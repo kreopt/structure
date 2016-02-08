@@ -162,24 +162,6 @@ const bp::structure::ptr bp::structure::at(const bp::symbol &_key) const {
     }
 }
 
-bool bp::structure::emplace(const bp::symbol &_key, const bp::structure::variant_t &_val) {
-    initialize_if_null(value_type::Object);
-    if (type() == value_type::Object) {
-        return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(_val)).second;
-    } else {
-        throw std::range_error("not an object");
-    }
-}
-
-bool bp::structure::emplace(const bp::symbol &_key, bp::structure::variant_t &&_val) {
-    initialize_if_null(value_type::Object);
-    if (type() == value_type::Object) {
-        return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(_val)).second;
-    } else {
-        throw std::range_error("not an object");
-    }
-}
-
 bool bp::structure::emplace(const bp::symbol &_key, const std::initializer_list<variant_t> &_val) {
     initialize_if_null(value_type::Object);
     if (type() == value_type::Object) {
@@ -202,24 +184,6 @@ bool bp::structure::emplace(const bp::symbol &_key,
             obj->emplace(item.first, std::make_shared<variant_t>(item.second));
         }
         return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(obj)).second;
-    } else {
-        throw std::range_error("not an object");
-    }
-}
-
-bool bp::structure::emplace(bp::symbol &&_key, const bp::structure::variant_t &_val) {
-    initialize_if_null(value_type::Object);
-    if (type() == value_type::Object) {
-        return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(_val)).second;
-    } else {
-        throw std::range_error("not an object");
-    }
-}
-
-bool bp::structure::emplace(bp::symbol &&_key, bp::structure::variant_t &&_val) {
-    initialize_if_null(value_type::Object);
-    if (type() == value_type::Object) {
-        return get_variant<object_ptr>(val_)->emplace(_key, std::make_shared<variant_t>(_val)).second;
     } else {
         throw std::range_error("not an object");
     }
@@ -252,28 +216,12 @@ bool bp::structure::emplace(bp::symbol &&_key,
     }
 }
 
-bool bp::structure::emplace(const char *_key, const bp::structure::variant_t &_val) {
-    return emplace(bp::symbol(_key), _val);
-}
-
-bool bp::structure::emplace(const char *_key, bp::structure::variant_t &&_val) {
-    return emplace(bp::symbol(_key), _val);
-}
-
 bool bp::structure::emplace(const char *_key, const std::initializer_list<variant_t> &_val) {
     return emplace(bp::symbol(_key), _val);
 }
 
 bool bp::structure::emplace(const char *_key,
                             const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) {
-    return emplace(bp::symbol(_key), _val);
-}
-
-bool bp::structure::emplace(const std::string &_key, const bp::structure::variant_t &_val) {
-    return emplace(bp::symbol(_key), _val);
-}
-
-bool bp::structure::emplace(const std::string &_key, bp::structure::variant_t &&_val) {
     return emplace(bp::symbol(_key), _val);
 }
 

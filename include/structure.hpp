@@ -68,15 +68,12 @@ namespace bp {
             variant_t(const array_ptr &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
             variant_t(array_ptr &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
 
-            variant_t(const value &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<value>(_val)){}
-            variant_t(value &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<value>(_val)){}
-            variant_t(const object_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<object_t>(_val)){}
-            variant_t(object_t &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<object_t>(_val)){}
-            variant_t(const array_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<array_t>(_val)){}
-            variant_t(array_t &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<array_t>(_val)){}
-
-//            variant_t(const variant_t &_var): boost::variant<value_ptr, object_ptr, array_ptr>(_var){}
-//            variant_t(variant_t &&_var): boost::variant<value_ptr, object_ptr, array_ptr>(_var){}
+            template <typename ValueType,
+                    class = typename std::enable_if<
+                            bp::is_any_of<std::remove_cv_t<std::remove_reference_t<ValueType>>,
+                                    value, object_t, array_t>::value
+                    >::type>
+            variant_t(ValueType &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<std::remove_reference_t<ValueType>>(std::forward<ValueType>(_val))){}
         };
 
     private:
@@ -172,35 +169,39 @@ namespace bp {
         structure::ptr at(const symbol &_key);
         const structure::ptr at(const symbol &_key) const;
 
+        template <typename KeyType, typename ValType,
+                class = typename std::enable_if<bp::is_any_of<std::remove_cv_t<std::remove_reference_t<KeyType>>, symbol, std::string, const char*>::value>::type,
+                class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
+        bool emplace(KeyType &&_key, ValType &&_val = nullptr) {
+            initialize_if_null(value_type::Object);
+            if (type() == value_type::Object) {
+                return get_variant<object_ptr>(val_)->
+                        emplace(std::forward<KeyType>(_key), std::make_shared<variant_t>(std::forward<ValType>(_val))).second;
+            } else {
+                throw std::range_error("not an object");
+            }
+        };
 
-        bool emplace(const std::string &_key, const variant_t &_val) ;
-        bool emplace(const std::string &_key, variant_t &&_val) ;
         bool emplace(const std::string &_key, const std::initializer_list<variant_t> &_val) ;
         bool emplace(const std::string &_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
-        bool emplace(const symbol &_key, const variant_t &_val = nullptr) ;
-        bool emplace(const symbol &_key, variant_t &&_val) ;
         bool emplace(const symbol &_key, const std::initializer_list<variant_t> &_val) ;
         bool emplace(const symbol &_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
-        bool emplace(symbol &&_key, const variant_t &_val = nullptr) ;
-        bool emplace(symbol &&_key, variant_t &&_val) ;
         bool emplace(symbol &&_key, const std::initializer_list<variant_t> &_val) ;
         bool emplace(symbol &&_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
-        bool emplace(const char* _key, const variant_t &_val) ;
-        bool emplace(const char* _key, variant_t &&_val) ;
         bool emplace(const char* _key, const std::initializer_list<variant_t> &_val) ;
         bool emplace(const char* _key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
         bool emplace(symbol &&_key, const bp::structure::ptr & _ptr) {
             if (_ptr) {
                 return emplace(std::forward<symbol>(_key), *_ptr);
             } else  {
-                return emplace(std::forward<symbol>(_key));
+                return emplace(std::forward<symbol>(_key), nullptr);
             }
         }
         bool emplace(const symbol &_key, const bp::structure::ptr & _ptr) {
             if (_ptr) {
                 return emplace(_key, *_ptr);
             } else  {
-                return emplace(_key);
+                return emplace(_key, nullptr);
             }
         }
 
@@ -307,8 +308,8 @@ namespace bp {
         public:
             iterable(const iterator_type &_it) : it_(_it){}
             iterable(const iterable &_it) : it_(_it.it_) {}
-            iterator_type begin() {return it_;}
-            iterator_type end() { return iterator_type(nullptr);}
+            iterator_type begin() const {return it_;}
+            iterator_type end() const { return iterator_type(nullptr);}
         };
         template <typename iterator_type>
         iterable<iterator_type> get_iterable() {
