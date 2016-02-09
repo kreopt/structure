@@ -61,19 +61,34 @@ namespace bp {
             variant_t(const serializable::string_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<value>(_val)) { }
             variant_t(const char* _val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val?std::make_shared<value>(std::string(_val)):nullptr) { }
 
-            variant_t(const value_ptr &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
-            variant_t(value_ptr &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
-            variant_t(const object_ptr &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
-            variant_t(object_ptr &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
-            variant_t(const array_ptr &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
-            variant_t(array_ptr &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
+            template <typename ValueType,
+                    class = typename std::enable_if<
+                            bp::is_any_of<
+                                    std::remove_cv_t<std::remove_reference_t<ValueType>>,
+                                    value, object_t, array_t>::value
+                    >::type>
+            variant_t(const std::shared_ptr<ValueType> &_val) :
+                    boost::variant<value_ptr, object_ptr, array_ptr>(_val){}
 
             template <typename ValueType,
                     class = typename std::enable_if<
-                            bp::is_any_of<std::remove_cv_t<std::remove_reference_t<ValueType>>,
+                            bp::is_any_of<
+                                    std::remove_cv_t<std::remove_reference_t<ValueType>>,
                                     value, object_t, array_t>::value
                     >::type>
-            variant_t(ValueType &&_val) : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<std::remove_reference_t<ValueType>>(std::forward<ValueType>(_val))){}
+            variant_t(std::shared_ptr<ValueType> &&_val) :
+                    boost::variant<value_ptr, object_ptr, array_ptr>(std::forward<std::shared_ptr<ValueType>>(_val)){}
+
+            template <typename ValueType,
+                    class = typename std::enable_if<
+                            bp::is_any_of<
+                                    std::remove_cv_t<std::remove_reference_t<ValueType>>,
+                                    value, object_t, array_t>::value
+                    >::type>
+            variant_t(ValueType &&_val) :
+                    boost::variant<value_ptr, object_ptr, array_ptr>(
+                            std::make_shared<std::remove_reference_t<ValueType>>(std::forward<ValueType>(_val))
+                    ){}
         };
 
     private:
@@ -162,10 +177,6 @@ namespace bp {
         bool append(const std::initializer_list<std::pair<std::string, variant_t>> &_val);
 
         // objects:
-        structure::ptr at(const char *_key);
-        const structure::ptr at(const char *_key) const;
-        structure::ptr at(const std::string &_key);
-        const structure::ptr at(const std::string &_key) const;
         structure::ptr at(const symbol &_key);
         const structure::ptr at(const symbol &_key) const;
 
@@ -182,14 +193,38 @@ namespace bp {
             }
         };
 
-        bool emplace(const std::string &_key, const std::initializer_list<variant_t> &_val) ;
-        bool emplace(const std::string &_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
-        bool emplace(const symbol &_key, const std::initializer_list<variant_t> &_val) ;
-        bool emplace(const symbol &_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
-        bool emplace(symbol &&_key, const std::initializer_list<variant_t> &_val) ;
-        bool emplace(symbol &&_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
-        bool emplace(const char* _key, const std::initializer_list<variant_t> &_val) ;
-        bool emplace(const char* _key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) ;
+        template <typename KeyType,
+                class = typename std::enable_if<bp::is_any_of<std::remove_cv_t<std::remove_reference_t<KeyType>>, symbol, std::string, const char*>::value>::type>
+        bool emplace(KeyType &&_key, const std::initializer_list<variant_t> &_val) {
+            initialize_if_null(value_type::Object);
+            if (type() == value_type::Object) {
+                array_ptr obj = std::make_shared<array_t>();
+                for (auto item: _val) {
+                    obj->push_back(std::make_shared<variant_t>(item));
+                }
+                return get_variant<object_ptr>(val_)->emplace(std::forward<KeyType>(_key), std::make_shared<variant_t>(obj)).second;
+            } else {
+                throw std::range_error("not an object");
+            }
+        };
+
+        template <typename KeyType,
+                class = typename std::enable_if<bp::is_any_of<std::remove_cv_t<std::remove_reference_t<KeyType>>, symbol, std::string, const char*>::value>::type>
+        bool emplace(KeyType &&_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val = nullptr) {
+            initialize_if_null(value_type::Object);
+            if (type() == value_type::Object) {
+                object_ptr obj = std::make_shared<object_t>();
+                for (auto item: _val) {
+                    obj->emplace(item.first, std::make_shared<variant_t>(item.second));
+                }
+                return get_variant<object_ptr>(val_)->emplace(std::forward<KeyType>(_key), std::make_shared<variant_t>(obj)).second;
+            } else {
+                throw std::range_error("not an object");
+            }
+        };
+
+        template <typename SymbolType,
+                class = typename std::enable_if<std::is_same<std::remove_cv_t<std::remove_reference_t<SymbolType>>, bp::symbol>::value>::type>
         bool emplace(symbol &&_key, const bp::structure::ptr & _ptr) {
             if (_ptr) {
                 return emplace(std::forward<symbol>(_key), *_ptr);
@@ -197,20 +232,25 @@ namespace bp {
                 return emplace(std::forward<symbol>(_key), nullptr);
             }
         }
-        bool emplace(const symbol &_key, const bp::structure::ptr & _ptr) {
-            if (_ptr) {
-                return emplace(_key, *_ptr);
-            } else  {
-                return emplace(_key, nullptr);
-            }
-        }
 
-        structure::ptr get(const std::string &_key, const variant_t &_default=nullptr) const ;
-        structure::ptr get(const std::string &_key, variant_t &&_default) const ;
-        structure::ptr get(const symbol &_key, const variant_t &_default=nullptr) const ;
-        structure::ptr get(const symbol &_key, variant_t &&_default) const ;
-        structure::ptr get(const char* _key, const variant_t &_default=nullptr) const ;
-        structure::ptr get(const char* _key, variant_t &&_default) const ;
+
+        template<typename ValueType,
+                class = typename std::enable_if<std::is_same<std::remove_cv_t<std::remove_reference_t<ValueType>>, variant_t>::value>::type>
+        structure::ptr get(const bp::symbol &_key, ValueType && _default) const {
+            if (type() == value_type::Object) {
+                try {
+                    auto val = get_variant<object_ptr>(val_)->at(_key);
+                    return create(val);
+                } catch (std::out_of_range &e) {
+                    return create(std::make_shared<variant_t>(std::forward<ValueType>(_default)));
+                }
+            } else {
+                throw std::range_error("not an object");
+            }
+        };
+        structure::ptr get(const bp::symbol &_key) const {
+            return get(_key, variant_t(nullptr));
+        };
 
         structure::ptr set(variant_t &&_val) ;
         structure::ptr set(const variant_t &_val) ;  // atom
@@ -220,7 +260,7 @@ namespace bp {
         //
 
         template <symbol::hash_type serializer_type>
-        std::string stringify() const {return std::string();};
+        std::string stringify() const {return "";};
 
         template <symbol::hash_type serializer_type>
         void parse(const std::string &_str) {};
