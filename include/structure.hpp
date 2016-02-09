@@ -144,11 +144,50 @@ namespace bp {
         V get_value(variant_ptr _val) const {
             return boost::get<V>(*get_variant<value_ptr>(_val));
         }
+
+        variant_ptr clone_variant(const variant_ptr &_ptr) {
+            auto type = boost::apply_visitor(variant_visitor(), *_ptr);
+            variant_ptr res;
+            switch (type) {
+                case value_type::Object: {
+                    auto obj = std::make_shared<object_t>();
+                    for (auto entry: *get_variant<object_ptr>(_ptr)) {
+                        obj->emplace(entry.first, clone_variant(entry.second));
+                    }
+                    res = std::make_shared<variant_t>(obj);
+                    break;
+                }
+                case value_type::Array: {
+                    auto arr = std::make_shared<array_t>();
+                    for (auto entry: *get_variant<array_ptr>(_ptr)) {
+                        arr->emplace_back(clone_variant(entry));
+                    }
+                    res = std::make_shared<variant_t>(arr);
+
+                    break;
+                }
+                default: {
+                    res = std::make_shared<variant_t>(*_ptr);
+                }
+            }
+            return res;
+        }
     public:
         operator variant_t() {
             return *val_;
         }
 
+
+        structure(const structure& _s) {
+            this->value_type_ = _s.value_type_;
+            this->val_ = clone_variant(_s.val_);
+        }
+
+        structure::ptr clone() {
+            return std::make_shared<structure>(*this);
+        }
+
+//        structure(structure &&_s){}
 
         serializable::string_t  as_string() const;
         serializable::int_t     as_int() const;
