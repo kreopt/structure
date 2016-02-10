@@ -106,7 +106,7 @@ namespace bp {
         }
 
         structure(bp::structure::variant_ptr _obj = nullptr);
-    protected:
+
         variant_ptr val_;
 
         inline void set_type(value_type _type) {value_type_ = _type;};
@@ -179,10 +179,6 @@ namespace bp {
         operator variant_ptr(){ return val_;}
 
         structure::ptr clone() {
-            return std::make_shared<structure>(*this);
-        }
-
-        structure::ptr move() {
             return std::make_shared<structure>(*this);
         }
 
@@ -325,7 +321,7 @@ namespace bp {
             if (val_) {
                 *val_ = _val;
             } else {
-                val_ = std::make_shared<variant_t>(_val);
+                val_ = std::make_shared<variant_t>(std::forward<ValType>(_val));
             }
             set_type(boost::apply_visitor(variant_visitor(), *val_));
             return *this;
@@ -334,7 +330,7 @@ namespace bp {
         template<typename ValType,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
         inline structure::ptr set(ValType &&_val) {
-            operator=(_val);
+            operator=(std::forward<ValType>(_val));
             return shared_from_this();
         };
         inline structure::ptr set(structure::ptr && _ptr) {
