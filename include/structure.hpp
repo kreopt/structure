@@ -93,6 +93,7 @@ namespace bp {
 
     private:
         value_type value_type_ = value_type::Null;
+        variant_ptr val_;
 
         void initialize_if_null(bp::structure::value_type _type);
 
@@ -104,10 +105,6 @@ namespace bp {
                 val_ = std::make_shared<variant_t>(std::make_shared<V>());
             }
         }
-
-        structure(bp::structure::variant_ptr _obj = nullptr);
-
-        variant_ptr val_;
 
         inline void set_type(value_type _type) {value_type_ = _type;};
         struct value_type_visitor : public boost::static_visitor<value_type> {
@@ -173,21 +170,20 @@ namespace bp {
             return res;
         }
     public:
+        structure(bp::structure::variant_ptr _obj = nullptr);
+        structure(const structure& _s) {
+            operator=(_s);
+        }
+        structure(structure &&_s){
+            operator=(std::move(_s));
+        }
+
         operator variant_t() {
             return *val_;
         }
         operator variant_ptr(){ return val_;}
-
         structure::ptr clone() {
             return std::make_shared<structure>(*this);
-        }
-
-        structure(const structure& _s) {
-            operator=(_s);
-        }
-
-        structure(structure &&_s){
-            operator=(_s);
         }
 
         serializable::string_t  as_string() const;
