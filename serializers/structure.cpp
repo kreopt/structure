@@ -68,40 +68,6 @@ size_t bp::structure::size() const {
     return 0;
 }
 
-bp::structure::ptr bp::structure::at(int index) {
-    if (type() == value_type::Array) {
-        return create((*get_variant<array_ptr>(val_))[index]);
-    } else {
-        throw std::range_error("not an array");
-    }
-}
-
-const bp::structure::ptr bp::structure::at(int index) const {
-    if (type() == value_type::Array) {
-        return create((*get_variant<array_ptr>(val_))[index]);
-    } else {
-        throw std::range_error("not an array");
-    }
-}
-
-void bp::structure::append(const variant_t &_val) {
-    initialize_if_null(value_type::Array);
-    if (type() == value_type::Array) {
-        return get_variant<array_ptr>(val_)->push_back(std::make_shared<variant_t>(_val));
-    } else {
-        throw std::range_error("not an array");
-    }
-}
-
-void bp::structure::append(variant_t &&_val) {
-    initialize_if_null(value_type::Array);
-    if (type() == value_type::Array) {
-        return get_variant<array_ptr>(val_)->emplace_back(std::make_shared<variant_t>(_val));
-    } else {
-        throw std::range_error("not an array");
-    }
-}
-
 bool bp::structure::append(const std::initializer_list<variant_t> &_val) {
     initialize_if_null(value_type::Array);
     if (type() == value_type::Array) {
@@ -130,63 +96,6 @@ bool bp::structure::append(const std::initializer_list<std::pair<std::string, va
     }
 }
 
-bp::structure::ptr bp::structure::at(const bp::symbol &_key) {
-    if (type() == value_type::Object) {
-        return create(get_variant<object_ptr>(val_)->at(_key));
-    } else {
-        throw std::range_error("not an object");
-    }
-}
-
-const bp::structure::ptr bp::structure::at(const bp::symbol &_key) const {
-    if (type() == value_type::Object) {
-        return create(get_variant<object_ptr>(val_)->at(_key));
-    } else {
-        throw std::range_error("not an object");
-    }
-}
-
-bp::structure::ptr bp::structure::set(bp::structure::variant_t &&_val) {
-    initialize_if_null(value_type::Object);
-    if (val_) {
-        *val_ = _val;
-    } else {
-        val_ = std::make_shared<variant_t>(_val);
-    }
-    set_type(boost::apply_visitor(variant_visitor(), _val));
-    return shared_from_this();
-}
-
-bp::structure::ptr bp::structure::set(const bp::structure::variant_t &_val) {
-    if (val_) {
-        *val_ = _val;
-    } else {
-        val_ = std::make_shared<variant_t>(_val);
-    }
-    set_type(boost::apply_visitor(variant_visitor(),_val));
-    return shared_from_this();
-}
-
-bp::structure::ptr bp::structure::set(const std::initializer_list<variant_t> &_val) {
-    initialize_val<array_t>();
-    for (auto item: _val) {
-        this->append(item);
-    }
-    set_type(value_type::Array);
-    return shared_from_this();
-}
-
-bp::structure::ptr bp::structure::set(
-        const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
-    initialize_val<object_t>();
-
-    for (auto item: _val) {
-        this->emplace(item.first, item.second);
-    }
-    set_type(value_type::Object);
-    return shared_from_this();
-}
-
 void bp::structure::initialize_if_null(bp::structure::value_type _type) {
     if (type()==value_type::Null) {
         switch (_type) {
@@ -201,4 +110,72 @@ void bp::structure::initialize_if_null(bp::structure::value_type _type) {
         }
         set_type(_type);
     }
+}
+
+bp::structure::ptr bp::structure::operator[](int index) {
+    if (type() == value_type::Array) {
+        return create((*get_variant<array_ptr>(val_))[index]);
+    } else {
+        throw std::range_error("not an array");
+    }
+}
+
+const bp::structure::ptr bp::structure::operator[](int index) const {
+    return static_cast<const structure*>(this)->operator[](index);
+}
+
+bp::structure::ptr bp::structure::operator[](const bp::symbol &_key) {
+    if (type() == value_type::Object) {
+        return create(get_variant<object_ptr>(val_)->at(_key));
+    } else {
+        throw std::range_error("not an object");
+    }
+}
+
+const bp::structure::ptr bp::structure::operator[](const bp::symbol &_key) const {
+    return static_cast<const structure*>(this)->operator[](_key);
+}
+
+bp::structure &bp::structure::operator=(const std::initializer_list<variant_t> &_val) {
+    initialize_val<array_t>();
+    for (auto item: _val) {
+        this->append(item);
+    }
+    set_type(value_type::Array);
+    return *this;
+}
+
+bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
+    initialize_val<object_t>();
+
+    for (auto item: _val) {
+        this->emplace(item.first, item.second);
+    }
+    set_type(value_type::Object);
+    return *this;
+}
+
+bp::structure &bp::structure::operator=(const structure::ptr &_str) {
+    operator=(*_str);
+    return *this;
+}
+
+bp::structure &bp::structure::operator=(structure::ptr &&_str) {
+    operator=(*_str);
+    _str.reset();
+    return *this;
+}
+
+bp::structure &bp::structure::operator=(const structure &_str) {
+    this->value_type_ = _str.value_type_;
+    this->val_ = clone_variant(_str.val_);
+    return *this;
+}
+
+bp::structure &bp::structure::operator=(structure &&_str) {
+    this->val_ =std::move(_str.val_);
+    this->value_type_ = std::move(_str.value_type_);
+    _str.val_ = nullptr;
+    _str.value_type_ = value_type::Null;
+    return *this;
 }

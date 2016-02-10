@@ -19,6 +19,8 @@ int main() {
                                        }*/);
 
         s->emplace("event"_sym, "caps"_sym);
+    auto ss = s->clone();
+    ss->at("event")->set("test");
     s->emplace("data"_sym, {
             {"mount"_sym, "dd"},
             {"caps"_sym, "cc"},
@@ -31,8 +33,11 @@ int main() {
 //        s->at("a")->append(39);
 //        s->emplace("o", {{"aa", 1}, {"bb", 1}});
 
-    std::string buf = s->stringify<bp::serializers::Dcm>();
-    std::cout << buf <<std::endl << static_cast<char>(s->get("d")->type()) << std::endl;
+
+    std::string buf = s->stringify<bp::serializers::Json>();
+    std::cout << buf <<std::endl <<
+            ss->stringify<bp::serializers::Json>() << std::endl <<
+            static_cast<char>(s->get("d")->type()) << std::endl;
 //
 //    for (const auto key: s->keys()) {
 //        std::cout << key << std::endl;

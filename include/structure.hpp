@@ -176,24 +176,29 @@ namespace bp {
         operator variant_t() {
             return *val_;
         }
-
-
-        structure(const structure& _s) {
-            this->value_type_ = _s.value_type_;
-            this->val_ = clone_variant(_s.val_);
-        }
+        operator variant_ptr(){ return val_;}
 
         structure::ptr clone() {
             return std::make_shared<structure>(*this);
         }
 
-//        structure(structure &&_s){}
+        structure::ptr move() {
+            return std::make_shared<structure>(*this);
+        }
+
+        structure(const structure& _s) {
+            operator=(_s);
+        }
+
+        structure(structure &&_s){
+            operator=(_s);
+        }
 
         serializable::string_t  as_string() const;
         serializable::int_t     as_int() const;
         serializable::float_t   as_float() const;
         serializable::bool_t    as_bool() const;
-        serializable::symbol  as_symbol() const;
+        serializable::symbol    as_symbol() const;
 
         inline bool is_int() const { return value_type_ == value_type::Int; }
         inline bool is_float() const {return value_type_ == value_type::Float; }
@@ -208,16 +213,31 @@ namespace bp {
 
         // arrays:
         size_t size() const;
-        structure::ptr at(int index);
-        const structure::ptr at(int index) const;
-        void append(const variant_t &_val);
-        void append(variant_t &&_val);
+
+        structure::ptr operator [](int index);
+        const structure::ptr operator [](int index) const;
+
+        inline structure::ptr at(int index) {return operator[](index);}
+        inline const structure::ptr at(int index) const { return operator[](index);};
+
+        template<typename ValType,
+                class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
+        void append(ValType &&_val) {
+            initialize_if_null(value_type::Array);
+            if (type() == value_type::Array) {
+                return get_variant<array_ptr>(val_)->push_back(std::make_shared<variant_t>(std::forward<ValType>(_val)));
+            } else {
+                throw std::range_error("not an array");
+            }
+        }
         bool append(const std::initializer_list<variant_t> &_val);
         bool append(const std::initializer_list<std::pair<std::string, variant_t>> &_val);
 
         // objects:
-        structure::ptr at(const symbol &_key);
-        const structure::ptr at(const symbol &_key) const;
+        structure::ptr operator [](const symbol &_key);
+        const structure::ptr operator [](const symbol &_key) const;
+        inline structure::ptr at(const symbol &_key) {return operator[](_key);}
+        inline const structure::ptr at(const symbol &_key) const {return operator[](_key);}
 
         template <typename KeyType, typename ValType,
                 class = typename std::enable_if<bp::is_any_of<std::remove_cv_t<std::remove_reference_t<KeyType>>, symbol, std::string, const char*>::value>::type,
@@ -291,10 +311,48 @@ namespace bp {
             return get(_key, variant_t(nullptr));
         };
 
-        structure::ptr set(variant_t &&_val) ;
-        structure::ptr set(const variant_t &_val) ;  // atom
-        structure::ptr set(const std::initializer_list<variant_t> &_val) ;   // array
-        structure::ptr set(const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;   // object
+        structure& operator=(const structure::ptr &_str);
+        structure& operator=(structure::ptr &&_str);
+        structure& operator=(const structure &_str);
+        structure& operator=(structure &&_str);
+        structure& operator=(const std::initializer_list<variant_t> &_val) ;   // array
+        structure& operator=(const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;   // object
+
+        template<typename ValType,
+                class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
+        structure& operator=(ValType &&_val) {
+            initialize_if_null(value_type::Object);
+            if (val_) {
+                *val_ = _val;
+            } else {
+                val_ = std::make_shared<variant_t>(_val);
+            }
+            set_type(boost::apply_visitor(variant_visitor(), *val_));
+            return *this;
+        }
+
+        template<typename ValType,
+                class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
+        inline structure::ptr set(ValType &&_val) {
+            operator=(_val);
+            return shared_from_this();
+        };
+        inline structure::ptr set(structure::ptr && _ptr) {
+            operator=(_ptr);
+            return shared_from_this();
+        };
+        inline structure::ptr set(const structure::ptr & _ptr) {
+            operator=(_ptr);
+            return shared_from_this();
+        };
+        inline structure::ptr set(const std::initializer_list<variant_t> &_val) {
+            operator=(_val);
+            return shared_from_this();
+        };   // array
+        inline structure::ptr set(const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
+            operator=(_val);
+            return shared_from_this();
+        };   // object
 
         //
 
