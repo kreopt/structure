@@ -450,6 +450,9 @@ namespace bp {
         iterable<object_iterator> as_object() {return this->get_iterable<object_iterator>();}
         iterable<array_iterator> as_array() {return this->get_iterable<array_iterator>();}
 
+        const iterable<object_key_iterator> keys() const {return static_cast<const structure*>(this)->keys();}
+        const iterable<object_iterator> as_object() const {return static_cast<const structure*>(this)->as_object();}
+        const iterable<array_iterator> as_array() const {return static_cast<const structure*>(this)->as_array();}
         // EXCEPTIONS
 
         class structure_error : public std::runtime_error {
