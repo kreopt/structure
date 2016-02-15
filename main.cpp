@@ -18,13 +18,21 @@ int main() {
                                                }}
                                        }*/);
 
-        s->emplace("event"_sym, "caps"_sym);
+        s->emplace("event", "caps");
     auto ss = s->clone();
     ss->at("event")->set("test");
+    ss->get("event", "");
+    ss->emplace({
+                        {"struct", *s}
+                });
     s->emplace("data"_sym, {
             {"mount"_sym, "dd"},
             {"caps"_sym, "cc"},
             {"endpoint"_sym, "ep"}});
+    s->emplace({
+                       {"a", "b"},
+                       {"c", "d"}
+               });
 //        s->emplace("i", 1);
 //        s->emplace("s", "string");
 //        s->emplace("b", true);

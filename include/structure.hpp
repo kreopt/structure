@@ -232,7 +232,7 @@ namespace bp {
         inline const structure::ptr at(const symbol &_key) const {return operator[](_key);}
 
         template <typename KeyType, typename ValType,
-                class = typename std::enable_if<bp::is_any_of<std::remove_cv_t<std::remove_reference_t<KeyType>>, symbol, std::string, const char*>::value>::type,
+                class = typename std::enable_if<std::is_convertible<std::remove_reference_t<KeyType>, bp::symbol>::value>::type,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
         bool emplace(KeyType &&_key, ValType &&_val = nullptr) {
             initialize_if_null(value_type::Object);
@@ -245,7 +245,7 @@ namespace bp {
         };
 
         template <typename KeyType,
-                class = typename std::enable_if<bp::is_any_of<std::remove_cv_t<std::remove_reference_t<KeyType>>, symbol, std::string, const char*>::value>::type>
+                class = typename std::enable_if<std::is_convertible<std::remove_reference_t<KeyType>, bp::symbol>::value>::type>
         bool emplace(KeyType &&_key, const std::initializer_list<variant_t> &_val) {
             initialize_if_null(value_type::Object);
             if (type() == value_type::Object) {
@@ -260,7 +260,7 @@ namespace bp {
         };
 
         template <typename KeyType,
-                class = typename std::enable_if<bp::is_any_of<std::remove_cv_t<std::remove_reference_t<KeyType>>, symbol, std::string, const char*>::value>::type>
+                class = typename std::enable_if<std::is_convertible<std::remove_reference_t<KeyType>, bp::symbol>::value>::type>
         bool emplace(KeyType &&_key, const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val = nullptr) {
             initialize_if_null(value_type::Object);
             if (type() == value_type::Object) {
@@ -269,6 +269,18 @@ namespace bp {
                     obj->emplace(item.first, std::make_shared<variant_t>(item.second));
                 }
                 return get_variant<object_ptr>(val_)->emplace(std::forward<KeyType>(_key), std::make_shared<variant_t>(obj)).second;
+            } else {
+                throw std::range_error("not an object");
+            }
+        };
+
+        bool emplace(const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) {
+            initialize_if_null(value_type::Object);
+            if (type() == value_type::Object) {
+                for (auto &entry: _val) {
+                    emplace(entry.first, entry.second);
+                }
+                return true; //
             } else {
                 throw std::range_error("not an object");
             }
@@ -286,7 +298,7 @@ namespace bp {
 
 
         template<typename ValueType,
-                class = typename std::enable_if<std::is_same<std::remove_cv_t<std::remove_reference_t<ValueType>>, variant_t>::value>::type>
+                class = typename std::enable_if<std::is_convertible<std::remove_cv_t<std::remove_reference_t<ValueType>>, variant_t>::value>::type>
         structure::ptr get(const bp::symbol &_key, ValueType && _default) const {
             if (type() == value_type::Object) {
                 try {
