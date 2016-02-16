@@ -18,7 +18,7 @@ bp::serializable::string_t bp::structure::as_string() const {
         case value_type::Float:   return std::to_string(get_value<serializable::float_t>(val_));
         case value_type::Bool:    return std::to_string(get_value<serializable::bool_t>(val_));
         case value_type::String:  return get_value<std::string>(val_);
-        case value_type::Symbol:  return std::string(get_value<serializable::symbol>(val_).name);
+        case value_type::Symbol:  return get_value<serializable::symbol>(val_).name();
         default: return "";
     }
 }

@@ -22,9 +22,9 @@ namespace bp {
                 r.append(reinterpret_cast<char *>(&sz), sizeof(size_block));
 
                 for (auto item: *val) {
-                    size_block key_size = static_cast<size_block >(item.first.name.size());
+                    size_block key_size = static_cast<size_block >(item.first.name().size());
                     r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));
-                    r.append(item.first.name);
+                    r.append(item.first.name());
                     r.append(create(item.second)->stringify<serializers::Dcm>());
                 }
                 break;
@@ -54,9 +54,9 @@ namespace bp {
                     r.append(val ? '\1' : '\0', 1);
                 } else if (is_symbol()) {
                     auto val = get_value<serializable::symbol>(val_);
-                    size_block key_size = static_cast<size_block >(val.name.size());
+                    size_block key_size = static_cast<size_block >(val.name().size());
                     r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));
-                    r.append(val.name);
+                    r.append(val.name());
                 }
                 break;
             }
