@@ -20,6 +20,7 @@ int main() {
 
         s->emplace("event", "caps");
     auto ss = s->clone();
+    bp::structure::variant_t var = bp::structure();
     ss->at("event")->set("test");
     ss->get("event", "");
     ss->emplace({

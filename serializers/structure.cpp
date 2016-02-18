@@ -4,6 +4,7 @@ bp::structure::structure(bp::structure::variant_ptr _obj) : val_(_obj) {
     if (_obj) {
         set_type(boost::apply_visitor(variant_visitor(), *val_));
     } else {
+        initialize_if_null(value_type::Null);
         set_type(value_type::Null);
     }
 }
@@ -113,6 +114,10 @@ void bp::structure::initialize_if_null(bp::structure::value_type _type) {
 }
 
 bp::structure::ptr bp::structure::operator[](int index) {
+    return std::const_pointer_cast<bp::structure>(static_cast<const structure*>(this)->operator[](index));
+}
+
+const bp::structure::ptr bp::structure::operator[](int index) const {
     if (type() == value_type::Array) {
         return create((*get_variant<array_ptr>(val_))[index]);
     } else {
@@ -120,20 +125,16 @@ bp::structure::ptr bp::structure::operator[](int index) {
     }
 }
 
-const bp::structure::ptr bp::structure::operator[](int index) const {
-    return static_cast<const structure*>(this)->operator[](index);
+bp::structure::ptr bp::structure::operator[](const bp::symbol &_key) {
+    return std::const_pointer_cast<bp::structure>(static_cast<const structure*>(this)->operator[](_key));
 }
 
-bp::structure::ptr bp::structure::operator[](const bp::symbol &_key) {
+const bp::structure::ptr bp::structure::operator[](const bp::symbol &_key) const {
     if (type() == value_type::Object) {
         return create(get_variant<object_ptr>(val_)->at(_key));
     } else {
         throw std::range_error("not an object");
     }
-}
-
-const bp::structure::ptr bp::structure::operator[](const bp::symbol &_key) const {
-    return static_cast<const structure*>(this)->operator[](_key);
 }
 
 bp::structure &bp::structure::operator=(const std::initializer_list<variant_t> &_val) {
@@ -167,6 +168,7 @@ bp::structure &bp::structure::operator=(structure::ptr &&_str) {
 }
 
 bp::structure &bp::structure::operator=(const structure &_str) {
+    if (&_str==this) return *this;
     this->value_type_ = _str.value_type_;
     this->val_ = clone_variant(_str.val_);
     return *this;

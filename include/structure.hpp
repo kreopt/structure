@@ -179,7 +179,11 @@ namespace bp {
         }
 
         operator variant_t() {
-            return *val_;
+            if (val_) {
+                return *val_;
+            } else {
+                return variant_t(nullptr);
+            };
         }
         operator variant_ptr(){ return val_;}
         structure::ptr clone() {
