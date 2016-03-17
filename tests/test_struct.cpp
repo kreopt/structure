@@ -32,6 +32,34 @@ TEST(StructTest, object_erase) {
     ASSERT_EQ(s.type(), bp::structure::value_type::Object)  << "empty object does not remains object";
 }
 
+TEST(StructTest, object_emplace) {
+    bp::structure s, s1;
+    s1["a"] = 1;
+
+    s.emplace("1", 1);
+    s.emplace("str", s1);
+    s.emplace("a", {1,2,3});
+    s.emplace("o", {{"a",1}});
+    s.emplace({{"oa", 1}, {"ob", 2}});
+
+    ASSERT_EQ(s.at("1").as_int(), 1);
+    ASSERT_NO_THROW(s.at("str").at("a"));
+    ASSERT_EQ(s.at("str").at("a").as_int(), 1);
+    ASSERT_EQ(s.at("a").is_array(), true);
+    ASSERT_EQ(s.at("a").size(), 3);
+    ASSERT_NO_THROW(s.at("a")[0]);
+    ASSERT_EQ(s.at("a")[0], 1);
+    ASSERT_EQ(s.at("o").is_object(), true);
+    ASSERT_EQ(s.at("o").size(), 1);
+    ASSERT_NO_THROW(s.at("o").at("a"));
+    ASSERT_EQ(s.at("o").at("a").as_int(), 1);
+
+    ASSERT_EQ(s.at("oa").as_int(), 1);
+    ASSERT_EQ(s.at("ob").as_int(), 2);
+
+    ASSERT_EQ(s.size(), 6);
+}
+
 TEST(StructTest, data_types) {
     bp::structure s;
     s["a"] = 1;

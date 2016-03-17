@@ -242,7 +242,7 @@ namespace bp {
         template <typename KeyType, typename ValType,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<KeyType>, bp::symbol>::value>::type,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
-        bool emplace(KeyType &&_key, ValType &&_val = nullptr) {
+        bool emplace(KeyType &&_key, ValType &&_val) {
             initialize_if_null(value_type::Object);
             if (type() == value_type::Object) {
                 return get_variant<object_ptr>(val_)->
@@ -294,11 +294,9 @@ namespace bp {
             }
         };
 
-        template <typename SymbolType,
-                class = typename std::enable_if<std::is_same<std::remove_cv_t<std::remove_reference_t<SymbolType>>, bp::symbol>::value>::type>
-        bool emplace(symbol &&_key, const bp::structure::ptr & _ptr) {
-            if (_ptr) {
-                return emplace(std::forward<symbol>(_key), *_ptr->data());
+        bool emplace(symbol &&_key, const bp::structure & _str) {
+            if (_str) {
+                return emplace(std::forward<symbol>(_key), *_str.data());
             } else  {
                 return emplace(std::forward<symbol>(_key), nullptr);
             }
