@@ -9,15 +9,11 @@ bp::structure::structure(bp::structure::variant_ptr _obj) : val_(_obj) {
     }
 }
 
-bp::structure::ptr bp::structure::create(bp::structure::variant_ptr _obj){
-    return std::shared_ptr<structure>(new structure(_obj));
-}
-
 bp::serializable::string_t bp::structure::as_string() const {
     switch (type()) {
         case value_type::Int:     return std::to_string(get_value<serializable::int_t>(val_));
         case value_type::Float:   return std::to_string(get_value<serializable::float_t>(val_));
-        case value_type::Bool:    return std::to_string(get_value<serializable::bool_t>(val_));
+        case value_type::Bool:    return get_value<serializable::bool_t>(val_)?"true":"false";
         case value_type::String:  return get_value<std::string>(val_);
         case value_type::Symbol:  return get_value<serializable::symbol>(val_).name();
         default: return "";
@@ -113,25 +109,45 @@ void bp::structure::initialize_if_null(bp::structure::value_type _type) {
     }
 }
 
-bp::structure::ptr bp::structure::operator[](int index) {
-    return std::const_pointer_cast<bp::structure>(static_cast<const structure*>(this)->operator[](index));
-}
-
-const bp::structure::ptr bp::structure::operator[](int index) const {
+bp::structure bp::structure::operator[] (int index) {
     if (type() == value_type::Array) {
-        return create((*get_variant<array_ptr>(val_))[index]);
+        return bp::structure((*get_variant<array_ptr>(val_))[index]);
     } else {
         throw std::range_error("not an array");
     }
 }
 
-bp::structure::ptr bp::structure::operator[](const bp::symbol &_key) {
-    return std::const_pointer_cast<bp::structure>(static_cast<const structure*>(this)->operator[](_key));
+bp::structure bp::structure::operator[](const bp::symbol &_key) {
+    if (type() != value_type::Object ) {
+        emplace(_key, nullptr);
+    }
+    auto var = get_variant<object_ptr>(val_);
+
+    if (!var->count(_key)) {
+        var->emplace(_key, nullptr);
+    }
+    return bp::structure(var->at(_key));
 }
 
-const bp::structure::ptr bp::structure::operator[](const bp::symbol &_key) const {
+void bp::structure::erase(const bp::symbol &_key) {
     if (type() == value_type::Object) {
-        return create(get_variant<object_ptr>(val_)->at(_key));
+         get_variant<object_ptr>(val_)->erase(_key);
+    } else {
+        throw std::range_error("not an object");
+    }
+}
+
+bp::structure bp::structure::at(int index) const {
+    if (type() == value_type::Array) {
+        return bp::structure((*get_variant<array_ptr>(val_))[index]);
+    } else {
+        throw std::range_error("not an array");
+    }
+}
+
+bp::structure bp::structure::at(const symbol &_key) const {
+    if (type() == value_type::Object) {
+        return bp::structure(get_variant<object_ptr>(val_)->at(_key));
     } else {
         throw std::range_error("not an object");
     }

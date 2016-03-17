@@ -92,9 +92,6 @@ namespace bp {
         };
 
     private:
-        value_type value_type_ = value_type::Null;
-        variant_ptr val_;
-
         void initialize_if_null(bp::structure::value_type _type);
 
         template <typename V, class = typename std::enable_if<bp::is_any_of<V, array_t, object_t>::value>::type>
@@ -107,6 +104,7 @@ namespace bp {
         }
 
         inline void set_type(value_type _type) {value_type_ = _type;};
+
         struct value_type_visitor : public boost::static_visitor<value_type> {
             value_type operator()(serializable::int_t _val) const { return value_type::Int; }
             value_type operator()(serializable::int_t &&_val) const { return value_type::Int; }
@@ -178,15 +176,21 @@ namespace bp {
             operator=(std::move(_s));
         }
 
-        operator variant_t() {
-            if (val_) {
-                return *val_;
-            } else {
-                return variant_t(nullptr);
-            };
+        operator bool() const {
+            return static_cast<bool>(val_);
         }
-        operator variant_ptr(){ return val_;}
-        structure::ptr clone() {
+//        operator variant_t() const {
+//            if (val_) {
+//                return *val_;
+//            } else {
+//                return variant_t(nullptr);
+//            };
+//        }
+//        operator variant_ptr() const { return val_;}
+
+        variant_ptr data() const {return val_;}
+
+        structure::ptr clone() const {
             return std::make_shared<structure>(*this);
         }
 
@@ -210,11 +214,9 @@ namespace bp {
         // arrays:
         size_t size() const;
 
-        structure::ptr operator [](int index);
-        const structure::ptr operator [](int index) const;
+        structure  operator[] (int index);
 
-        inline structure::ptr at(int index) {return operator[](index);}
-        inline const structure::ptr at(int index) const { return operator[](index);};
+        structure at(int index) const;
 
         template<typename ValType,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
@@ -230,10 +232,12 @@ namespace bp {
         bool append(const std::initializer_list<std::pair<std::string, variant_t>> &_val);
 
         // objects:
-        structure::ptr operator [](const symbol &_key);
-        const structure::ptr operator [](const symbol &_key) const;
-        inline structure::ptr at(const symbol &_key) {return operator[](_key);}
-        inline const structure::ptr at(const symbol &_key) const {return operator[](_key);}
+        structure operator [](const symbol &_key);
+        structure operator [](const char* _key) {return operator[](bp::symbol(_key));}
+
+        structure at(const symbol &_key) const;
+
+        void erase(const symbol &_key);
 
         template <typename KeyType, typename ValType,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<KeyType>, bp::symbol>::value>::type,
@@ -294,7 +298,7 @@ namespace bp {
                 class = typename std::enable_if<std::is_same<std::remove_cv_t<std::remove_reference_t<SymbolType>>, bp::symbol>::value>::type>
         bool emplace(symbol &&_key, const bp::structure::ptr & _ptr) {
             if (_ptr) {
-                return emplace(std::forward<symbol>(_key), *_ptr);
+                return emplace(std::forward<symbol>(_key), *_ptr->data());
             } else  {
                 return emplace(std::forward<symbol>(_key), nullptr);
             }
@@ -303,19 +307,19 @@ namespace bp {
 
         template<typename ValueType,
                 class = typename std::enable_if<std::is_convertible<std::remove_cv_t<std::remove_reference_t<ValueType>>, variant_t>::value>::type>
-        structure::ptr get(const bp::symbol &_key, ValueType && _default) const {
+        structure get(const bp::symbol &_key, ValueType && _default) const {
             if (type() == value_type::Object) {
                 try {
                     auto val = get_variant<object_ptr>(val_)->at(_key);
-                    return create(val);
+                    return bp::structure(val);
                 } catch (std::out_of_range &e) {
-                    return create(std::make_shared<variant_t>(std::forward<ValueType>(_default)));
+                    return bp::structure(std::make_shared<variant_t>(std::forward<ValueType>(_default)));
                 }
             } else {
                 throw std::range_error("not an object");
             }
         };
-        structure::ptr get(const bp::symbol &_key) const {
+        structure get(const bp::symbol &_key) const {
             return get(_key, variant_t(nullptr));
         };
 
@@ -341,26 +345,27 @@ namespace bp {
 
         template<typename ValType,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
-        inline structure::ptr set(ValType &&_val) {
+        inline structure& set(ValType &&_val) {
             operator=(std::forward<ValType>(_val));
-            return shared_from_this();
+            return *this;
         };
-        inline structure::ptr set(structure::ptr && _ptr) {
-            operator=(_ptr);
-            return shared_from_this();
+        inline structure& set(structure && _str) {
+            operator=(_str);
+            return *this;
         };
-        inline structure::ptr set(const structure::ptr & _ptr) {
-            operator=(_ptr);
-            return shared_from_this();
+        inline structure& set(const structure & _str) {
+            operator=(_str);
+            return *this;
         };
-        inline structure::ptr set(const std::initializer_list<variant_t> &_val) {
+        inline structure& set(const std::initializer_list<variant_t> &_val) {
             operator=(_val);
-            return shared_from_this();
+            return *this;
         };   // array
-        inline structure::ptr set(const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
+        inline structure& set(const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
             operator=(_val);
-            return shared_from_this();
-        };   // object
+            return *this;
+        };
+        // object
 
         //
 
@@ -370,23 +375,21 @@ namespace bp {
         template <symbol::hash_type serializer_type>
         void parse(const std::string &_str) {};
 
-        static structure::ptr create(variant_ptr _obj = nullptr);
-
         template <symbol::hash_type serializer_type>
-        static structure::ptr create_from_string(const std::string &_s){
-            auto structure = create();
-            structure->parse<serializer_type>(_s);
-            return structure;
+        static structure create_from_string(const std::string &_s){
+            structure s;
+            s.parse<serializer_type>(_s);
+            return s;
         };
 
         // ITERATORS
 
         class object_key_iterator : public std::iterator<std::input_iterator_tag, const char*> {
-            const structure::ptr object_;
+            const structure &object_;
             object_t::iterator    it;
             object_t::iterator    end;
         public:
-            object_key_iterator(const structure::ptr &_object);
+            object_key_iterator(const structure &_object);
             object_key_iterator(const object_key_iterator&_it);
             object_key_iterator & operator++();
             object_key_iterator operator++(int);
@@ -396,18 +399,18 @@ namespace bp {
         };
 
         // TODO: methods to conform forward iterator interface
-        class object_iterator : public std::iterator<std::forward_iterator_tag, structure::ptr> {
-            const structure::ptr object_;
+        class object_iterator : public std::iterator<std::forward_iterator_tag, structure> {
+            const structure &object_;
             object_t::iterator    it;
             object_t::iterator    end;
         public:
-            object_iterator(const structure::ptr &_object);
+            object_iterator(const structure &_object);
             object_iterator(const object_iterator&_it);
             object_iterator & operator++();
             object_iterator operator++(int);
             bool operator==(const object_iterator& rhs);
             bool operator!=(const object_iterator& rhs);
-            std::pair<bp::structure::object_t::key_type, bp::structure::ptr>  operator*();
+            std::pair<bp::structure::object_t::key_type, bp::structure>  operator*();
 
             /////
 //            reference operator*() const;
@@ -415,18 +418,18 @@ namespace bp {
         };
 
         // TODO: methods to conform random access iterator interface
-        class array_iterator : public std::iterator<std::random_access_iterator_tag, structure::ptr> {
-            const structure::ptr object_;
+        class array_iterator : public std::iterator<std::random_access_iterator_tag, structure> {
+            const structure &object_;
             size_t  index;
             size_t  size;
         public:
-            array_iterator(const structure::ptr &_object);
+            array_iterator(const structure &_object);
             array_iterator(const array_iterator&_it);
             array_iterator & operator++();
             array_iterator operator++(int);
             bool operator==(const array_iterator& rhs);
             bool operator!=(const array_iterator& rhs);
-            bp::structure::ptr  operator*();
+            bp::structure  operator*();
 
             /////
 //            array_iterator& operator--(); //prefix increment
@@ -458,7 +461,7 @@ namespace bp {
         };
         template <typename iterator_type>
         iterable<iterator_type> get_iterable() {
-            return iterable<iterator_type>(iterator_type(this->shared_from_this()));
+            return iterable<iterator_type>(iterator_type(*this));
         }
     public:
 
@@ -479,6 +482,10 @@ namespace bp {
         public:
             parse_error(const char* _msg) : structure_error(_msg){}
         };
+
+    private:
+        value_type value_type_ = value_type::Null;
+        variant_ptr val_;
     };
 }
 

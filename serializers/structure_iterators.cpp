@@ -2,9 +2,9 @@
 
 // OBJECT KEYS
 
-bp::structure::object_key_iterator::object_key_iterator(const structure::ptr &_object) : object_(_object) {
-    if (object_ && object_->is_object()) {
-        it = object_->get_variant<object_ptr>(object_->val_)->begin();
+bp::structure::object_key_iterator::object_key_iterator(const structure &_object) : object_(_object) {
+    if (object_ && object_.is_object()) {
+        it = object_.get_variant<object_ptr>(object_.val_)->begin();
     }
 }
 
@@ -41,9 +41,9 @@ bool bp::structure::object_key_iterator::operator!=(const object_key_iterator& r
 
 // OBJECT ITEMS
 
-bp::structure::object_iterator::object_iterator(const structure::ptr &_object) : object_(_object) {
-    if (object_ && object_->is_object()) {
-        it = object_->get_variant<object_ptr>(object_->val_)->begin();
+bp::structure::object_iterator::object_iterator(const structure &_object) : object_(_object) {
+    if (object_ && object_.is_object()) {
+        it = object_.get_variant<object_ptr>(object_.val_)->begin();
     }
 }
 
@@ -64,11 +64,11 @@ bool bp::structure::object_iterator::operator==(const bp::structure::object_iter
     return it==rhs.it;
 }
 
-std::pair<bp::structure::object_t::key_type, bp::structure::ptr> bp::structure::object_iterator::operator*() {
+std::pair<bp::structure::object_t::key_type, bp::structure> bp::structure::object_iterator::operator*() {
     if (!object_ || it==end) {
-        return std::make_pair(""_sym, bp::structure::ptr());
+        return std::make_pair(""_sym, bp::structure());
     }
-    return std::make_pair(it->first, bp::structure::create(it->second));
+    return std::make_pair(it->first, bp::structure(it->second));
 }
 
 bool bp::structure::object_iterator::operator!=(const bp::structure::object_iterator& rhs) {
@@ -80,11 +80,11 @@ bool bp::structure::object_iterator::operator!=(const bp::structure::object_iter
 
 // ARRAY ITEMS
 
-bp::structure::array_iterator::array_iterator(const structure::ptr &_object) : object_(_object) {
+bp::structure::array_iterator::array_iterator(const structure &_object) : object_(_object) {
     index = 0;
     size = 0;
-    if (object_ && object_->is_array()) {
-        size = object_->size();
+    if (object_ && object_.is_array()) {
+        size = object_.size();
     }
 }
 
@@ -107,11 +107,11 @@ bool bp::structure::array_iterator::operator==(const bp::structure::array_iterat
     return index==rhs.index;
 }
 
-bp::structure::ptr bp::structure::array_iterator::operator*() {
+bp::structure bp::structure::array_iterator::operator*() {
     if (!object_ || index>=size || index == -1) {
-        return nullptr;
+        return bp::structure();
     }
-    return object_->at(index);
+    return object_.at(index);
 }
 
 bool bp::structure::array_iterator::operator!=(const bp::structure::array_iterator& rhs) {

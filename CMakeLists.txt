@@ -6,6 +6,7 @@ set(BUILD_JSON ON)
 set(BUILD_DCM ON)
 
 set(SOURCE_FILES main.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp)
+set(TEST_FILES tests/test_struct.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp)
 
 if (BUILD_JSON)
     set(JSON_SOURCES include/serializers/json.hpp serializers/json.cpp)
@@ -20,9 +21,11 @@ find_package(BpUtil REQUIRED)
 include_directories(include)
 
 add_executable(serializers ${SOURCE_FILES})
+add_executable(${PROJECT_NAME}Test ${TEST_FILES})
 
 add_library(${PROJECT_NAME} SHARED serializers/structure.cpp serializers/structure_iterators.cpp)
 target_link_libraries(${PROJECT_NAME} ${BPUTIL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}Test ${BPUTIL_LIBRARIES} gtest pthread gtest_main )
 
 
 if (BUILD_JSON)

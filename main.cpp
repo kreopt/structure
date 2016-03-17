@@ -10,7 +10,7 @@ using namespace bp::literals;
 int main() {
     auto tp = std::chrono::high_resolution_clock::now();
 //    for (int i=0; i<1000; i++) {
-        auto s = bp::structure::create(/*{
+        auto s = bp::structure(/*{
                                                {"event"_sym, "test"},
                                                {"data"_sym, {
                                                    {"a", 1},
@@ -20,7 +20,7 @@ int main() {
 
         s->emplace("event", "caps");
     auto ss = s->clone();
-    bp::structure::variant_t var = bp::structure();
+    bp::structure::variant_t var;
     ss->at("event")->set("test");
     ss->get("event", "");
     ss->emplace({
