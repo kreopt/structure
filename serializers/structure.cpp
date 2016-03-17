@@ -172,6 +172,16 @@ bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<st
     return *this;
 }
 
+bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<std::string, structure>> &_val) {
+    initialize_val<object_t>();
+
+    for (auto item: _val) {
+        this->emplace(item.first, *item.second.data());
+    }
+    set_type(value_type::Object);
+    return *this;
+}
+
 bp::structure &bp::structure::operator=(const structure::ptr &_str) {
     operator=(*_str);
     return *this;
@@ -196,4 +206,36 @@ bp::structure &bp::structure::operator=(structure &&_str) {
     _str.val_ = nullptr;
     _str.value_type_ = value_type::Null;
     return *this;
+}
+
+bool bp::structure::emplace(const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) {
+    initialize_if_null(value_type::Object);
+    if (type() == value_type::Object) {
+        for (auto &entry: _val) {
+            emplace(entry.first, entry.second);
+        }
+        return true; //
+    } else {
+        throw std::range_error("not an object");
+    }
+}
+
+//bool bp::structure::emplace(const std::initializer_list<std::pair<bp::symbol, structure>> &_val) {
+//    initialize_if_null(value_type::Object);
+//    if (type() == value_type::Object) {
+//        for (auto &entry: _val) {
+//            emplace(entry.first, *entry.second.data());
+//        }
+//        return true; //
+//    } else {
+//        throw std::range_error("not an object");
+//    }
+//}
+
+bool bp::structure::emplace(symbol &&_key, const bp::structure & _str) {
+    if (_str) {
+        return emplace(std::forward<symbol>(_key), *_str.data());
+    } else  {
+        return emplace(std::forward<symbol>(_key), nullptr);
+    }
 }

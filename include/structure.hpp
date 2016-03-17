@@ -4,6 +4,7 @@
 #include <string>
 #include <iterator>
 #include <unordered_map>
+#include <vector>
 #include <boost/variant.hpp>
 #include <binelpro/symbol.hpp>
 #include <binelpro/util.hpp>
@@ -19,7 +20,7 @@ namespace bp {
         using string_t = std::string;
     }
 
-    class structure : public std::enable_shared_from_this<structure>{
+    class structure {
     public:
         using ptr = std::shared_ptr<structure>;
 
@@ -179,14 +180,6 @@ namespace bp {
         operator bool() const {
             return static_cast<bool>(val_);
         }
-//        operator variant_t() const {
-//            if (val_) {
-//                return *val_;
-//            } else {
-//                return variant_t(nullptr);
-//            };
-//        }
-//        operator variant_ptr() const { return val_;}
 
         variant_ptr data() const {return val_;}
 
@@ -282,25 +275,26 @@ namespace bp {
             }
         };
 
-        bool emplace(const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) {
+        template <typename KeyType,
+                class = typename std::enable_if<std::is_convertible<std::remove_reference_t<KeyType>, bp::symbol>::value>::type>
+        bool emplace(KeyType &&_key, const std::initializer_list<std::pair<bp::symbol, bp::structure>> &_val = nullptr) {
             initialize_if_null(value_type::Object);
             if (type() == value_type::Object) {
-                for (auto &entry: _val) {
-                    emplace(entry.first, entry.second);
+                object_ptr obj = std::make_shared<object_t>();
+                for (auto item: _val) {
+                    obj->emplace(item.first, std::make_shared<variant_t>(item.second));
                 }
-                return true; //
+                return get_variant<object_ptr>(val_)->emplace(std::forward<KeyType>(_key), std::make_shared<variant_t>(obj)).second;
             } else {
                 throw std::range_error("not an object");
             }
         };
 
-        bool emplace(symbol &&_key, const bp::structure & _str) {
-            if (_str) {
-                return emplace(std::forward<symbol>(_key), *_str.data());
-            } else  {
-                return emplace(std::forward<symbol>(_key), nullptr);
-            }
-        }
+        bool emplace(const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val);
+
+//        bool emplace(const std::initializer_list<std::pair<bp::symbol, structure>> &_val);
+
+        bool emplace(symbol &&_key, const bp::structure & _str);
 
 
         template<typename ValueType,
@@ -317,7 +311,7 @@ namespace bp {
                 throw std::range_error("not an object");
             }
         };
-        structure get(const bp::symbol &_key) const {
+        inline structure get(const bp::symbol &_key) const {
             return get(_key, variant_t(nullptr));
         };
 
@@ -327,6 +321,7 @@ namespace bp {
         structure& operator=(structure &&_str);
         structure& operator=(const std::initializer_list<variant_t> &_val) ;   // array
         structure& operator=(const std::initializer_list<std::pair<std::string, variant_t>> &_val) ;   // object
+//        structure& operator=(const std::initializer_list<std::pair<std::string, structure>> &_val) ;   // object
 
         template<typename ValType,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<ValType>, variant_t>::value>::type>
@@ -363,6 +358,10 @@ namespace bp {
             operator=(_val);
             return *this;
         };
+//        inline structure& set(const std::initializer_list<std::pair<std::string, structure>> &_val) {
+//            operator=(_val);
+//            return *this;
+//        };
         // object
 
         //
@@ -455,7 +454,7 @@ namespace bp {
             iterable(const iterator_type &_it) : it_(_it){}
             iterable(const iterable &_it) : it_(_it.it_) {}
             iterator_type begin() const {return it_;}
-            iterator_type end() const { return iterator_type(nullptr);}
+            iterator_type end() const { return iterator_type(structure());}
         };
         template <typename iterator_type>
         iterable<iterator_type> get_iterable() {

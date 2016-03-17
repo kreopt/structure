@@ -5,33 +5,33 @@
 
 namespace bp {
 
-    Json::Value build_json(structure::ptr root) {
+    Json::Value build_json(const structure& root) {
         Json::Value r;
-        auto tp = root->type();
+        auto tp = root.type();
         switch (tp) {
             case structure::value_type::Object: {
-                for (auto item: root->keys()) {
-                    r[item]=build_json(root->at(item));
+                for (auto item: root.keys()) {
+                    r[item]=build_json(root.at(item));
                 }
                 break;
             }
             case structure::value_type::Array: {
-                for (int i=0; i<root->size(); ++i) {
-                    r.append(build_json(root->at(i)));
+                for (int i=0; i<root.size(); ++i) {
+                    r.append(build_json(root.at(i)));
                 }
                 break;
             }
             default: {
-                if (root->is_string()) {
-                    r = root->as_string();
-                } else if (root->is_int()) {
-                    r = root->as_int();
-                } else if (root->is_float()) {
-                    r = root->as_float();
-                } else if (root->is_bool()) {
-                    r = root->as_bool();
-                } else if (root->is_symbol()) {
-                    r = root->as_string();
+                if (root.is_string()) {
+                    r = root.as_string();
+                } else if (root.is_int()) {
+                    r = root.as_int();
+                } else if (root.is_float()) {
+                    r = root.as_float();
+                } else if (root.is_bool()) {
+                    r = root.as_bool();
+                } else if (root.is_symbol()) {
+                    r = root.as_string();
                 }
                 break;
             }
@@ -42,8 +42,7 @@ namespace bp {
 
     template<>
     std::string structure::stringify<serializers::Json>() const {
-        structure::ptr root = std::const_pointer_cast<bp::structure>(shared_from_this());
-        return build_json(root).toStyledString();
+        return build_json(*this).toStyledString();
     };
 
     structure::variant_ptr parse_variant(const Json::Value &root) {

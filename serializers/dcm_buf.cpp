@@ -25,7 +25,7 @@ namespace bp {
                     size_block key_size = static_cast<size_block >(item.first.name().size());
                     r.append(reinterpret_cast<const char *>(&key_size), sizeof(size_block));
                     r.append(item.first.name());
-                    r.append(create(item.second)->stringify<serializers::Dcm>());
+                    r.append(structure(item.second).stringify<serializers::Dcm>());
                 }
                 break;
             }
@@ -33,7 +33,7 @@ namespace bp {
                 sz = static_cast<size_block>(this->size());
                 r.append(reinterpret_cast<char *>(&sz), sizeof(size_block));
                 for (int i = 0; i < sz; i++) {
-                    r.append(this->at(i)->stringify<serializers::Dcm>());
+                    r.append(this->at(i).stringify<serializers::Dcm>());
                 }
                 break;
             }

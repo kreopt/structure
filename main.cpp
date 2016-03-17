@@ -18,19 +18,19 @@ int main() {
                                                }}
                                        }*/);
 
-        s->emplace("event", "caps");
-    auto ss = s->clone();
+        s.emplace("event", "caps");
+    bp::structure ss(s);
     bp::structure::variant_t var;
-    ss->at("event")->set("test");
-    ss->get("event", "");
-    ss->emplace({
-                        {"struct", *s}
+    ss.at("event").set("test");
+    ss.get("event", "");
+    ss.emplace({
+                        {"struct", *s.data()}
                 });
-    s->emplace("data"_sym, {
+    s.emplace("data"_sym, {
             {"mount"_sym, "dd"},
             {"caps"_sym, "cc"},
             {"endpoint"_sym, "ep"}});
-    s->emplace({
+    s.emplace({
                        {"a", "b"},
                        {"c", "d"}
                });
@@ -43,10 +43,10 @@ int main() {
 //        s->emplace("o", {{"aa", 1}, {"bb", 1}});
 
 
-    std::string buf = s->stringify<bp::serializers::Json>();
+    std::string buf = s.stringify<bp::serializers::Json>();
     std::cout << buf <<std::endl <<
-            ss->stringify<bp::serializers::Json>() << std::endl <<
-            static_cast<char>(s->get("d")->type()) << std::endl;
+            ss.stringify<bp::serializers::Json>() << std::endl <<
+            static_cast<char>(s.get("d").type()) << std::endl;
 //
 //    for (const auto key: s->keys()) {
 //        std::cout << key << std::endl;
