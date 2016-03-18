@@ -1,6 +1,63 @@
 #include "structure.hpp"
 
-bp::structure::structure(bp::structure::variant_ptr _obj) : val_(_obj) {
+using namespace bp::serializable;
+
+struct value_type_visitor : public boost::static_visitor<bp::structure::value_type> {
+    bp::structure::value_type operator()(bp::serializable::int_t _val) const { return bp::structure::value_type::Int; }
+    bp::structure::value_type operator()(bp::serializable::int_t &&_val) const { return bp::structure::value_type::Int; }
+    bp::structure::value_type operator()(bp::serializable::float_t _val) const { return bp::structure::value_type::Float; }
+    bp::structure::value_type operator()(bp::serializable::float_t &&_val) const { return bp::structure::value_type::Float; }
+    bp::structure::value_type operator()(bp::serializable::bool_t _val) const { return bp::structure::value_type::Bool; }
+    bp::structure::value_type operator()(bp::serializable::bool_t &&_val) const { return bp::structure::value_type::Bool; }
+    bp::structure::value_type operator()(const bp::serializable::symbol &_val) const { return bp::structure::value_type::Symbol; }
+    bp::structure::value_type operator()(bp::serializable::symbol &&_val) const { return bp::structure::value_type::Symbol; }
+    bp::structure::value_type operator()(const bp::serializable::string_t & _val) const { return bp::structure::value_type::String; }
+    bp::structure::value_type operator()(bp::serializable::string_t && _val) const { return bp::structure::value_type::String; }
+};
+
+struct variant_visitor : public boost::static_visitor<bp::structure::value_type> {
+    bp::structure::value_type operator()(value_ptr _val) const {
+        if (_val) {
+            return boost::apply_visitor(value_type_visitor(), *_val);
+        } else {
+            return bp::structure::value_type::Null;
+        }
+    }
+
+    bp::structure::value_type operator()(object_ptr _val) const { return bp::structure::value_type::Object; }
+
+    bp::structure::value_type operator()(array_ptr _val) const { return bp::structure::value_type::Array; }
+};
+
+variant_ptr clone_variant(const variant_ptr &_ptr) {
+    auto type = boost::apply_visitor(variant_visitor(), *_ptr);
+    variant_ptr res;
+    switch (type) {
+        case bp::structure::value_type::Object: {
+            auto obj = std::make_shared<bp::serializable::object>();
+            for (auto entry: *bp::serializable::get_variant<bp::serializable::object_ptr>(_ptr)) {
+                obj->emplace(entry.first, clone_variant(entry.second));
+            }
+            res = std::make_shared<bp::serializable::variant>(obj);
+            break;
+        }
+        case bp::structure::value_type::Array: {
+            auto arr = std::make_shared<bp::serializable::array>();
+            for (auto entry: *bp::serializable::get_variant<bp::serializable::array_ptr>(_ptr)) {
+                arr->emplace_back(clone_variant(entry));
+            }
+            res = std::make_shared<bp::serializable::variant>(arr);
+
+            break;
+        }
+        default: {
+            res = std::make_shared<bp::serializable::variant>(*_ptr);
+        }
+    }
+    return res;
+}
+
+bp::structure::structure(bp::serializable::variant_ptr _obj) : val_(_obj) {
     if (_obj) {
         set_type(boost::apply_visitor(variant_visitor(), *val_));
     } else {
@@ -11,20 +68,20 @@ bp::structure::structure(bp::structure::variant_ptr _obj) : val_(_obj) {
 
 bp::serializable::string_t bp::structure::as_string() const {
     switch (type()) {
-        case value_type::Int:     return std::to_string(get_value<serializable::int_t>(val_));
-        case value_type::Float:   return std::to_string(get_value<serializable::float_t>(val_));
-        case value_type::Bool:    return get_value<serializable::bool_t>(val_)?"true":"false";
-        case value_type::String:  return get_value<std::string>(val_);
-        case value_type::Symbol:  return get_value<serializable::symbol>(val_).name();
+        case value_type::Int:     return std::to_string(serializable::get_value<serializable::int_t>(val_));
+        case value_type::Float:   return std::to_string(serializable::get_value<serializable::float_t>(val_));
+        case value_type::Bool:    return serializable::get_value<serializable::bool_t>(val_)?"true":"false";
+        case value_type::String:  return serializable::get_value<std::string>(val_);
+        case value_type::Symbol:  return serializable::get_value<serializable::symbol>(val_).name();
         default: return "";
     }
 }
 
 bp::serializable::int_t bp::structure::as_int() const {
     switch (type()) {
-        case value_type::Int:   return get_value<serializable::int_t>(val_);
-        case value_type::Float: return static_cast<serializable::int_t>(get_value<serializable::float_t>(val_));
-        case value_type::Bool:  return static_cast<serializable::int_t>(get_value<serializable::bool_t>(val_));
+        case value_type::Int:   return serializable::get_value<serializable::int_t>(val_);
+        case value_type::Float: return static_cast<serializable::int_t>(serializable::get_value<serializable::float_t>(val_));
+        case value_type::Bool:  return static_cast<serializable::int_t>(serializable::get_value<serializable::bool_t>(val_));
         default:
             return 0;
     }
@@ -65,28 +122,28 @@ size_t bp::structure::size() const {
     return 0;
 }
 
-bool bp::structure::append(const std::initializer_list<variant_t> &_val) {
+bool bp::structure::append(const std::initializer_list<bp::serializable::variant> &_val) {
     initialize_if_null(value_type::Array);
     if (type() == value_type::Array) {
-        array_ptr arr = std::make_shared<array_t>();
+        array_ptr arr = std::make_shared<array>();
         for (auto item: _val) {
-            arr->push_back(std::make_shared<variant_t>(item));
+            arr->push_back(std::make_shared<variant>(item));
         }
-        get_variant<array_ptr>(val_)->push_back(std::make_shared<variant_t>(arr));
+        get_variant<array_ptr>(val_)->push_back(std::make_shared<variant>(arr));
         return true;
     } else {
         throw std::range_error("not an array");
     }
 }
 
-bool bp::structure::append(const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
+bool bp::structure::append(const std::initializer_list<std::pair<std::string, bp::serializable::variant>> &_val) {
     initialize_if_null(value_type::Array);
     if (type() == value_type::Array) {
-        object_ptr obj = std::make_shared<object_t>();
+        object_ptr obj = std::make_shared<object>();
         for (auto item: _val) {
-            obj->emplace(bp::symbol(item.first), std::make_shared<variant_t>(item.second));
+            obj->emplace(bp::symbol(item.first), std::make_shared<variant>(item.second));
         }
-        get_variant<array_ptr>(val_)->push_back(std::make_shared<variant_t>(obj));
+        get_variant<array_ptr>(val_)->push_back(std::make_shared<variant>(obj));
         return true;
     } else {
         throw std::range_error("not an array");
@@ -97,10 +154,10 @@ void bp::structure::initialize_if_null(bp::structure::value_type _type) {
     if (type()==value_type::Null) {
         switch (_type) {
             case value_type::Object:
-                initialize_val<object_t>();
+                initialize_val<object>();
                 break;
             case value_type::Array:
-                initialize_val<array_t>();
+                initialize_val<array>();
                 break;
             default:
                 break;
@@ -153,8 +210,8 @@ bp::structure bp::structure::at(const symbol &_key) const {
     }
 }
 
-bp::structure &bp::structure::operator=(const std::initializer_list<variant_t> &_val) {
-    initialize_val<array_t>();
+bp::structure &bp::structure::operator=(const std::initializer_list<variant> &_val) {
+    initialize_val<array>();
     for (auto item: _val) {
         this->append(item);
     }
@@ -162,8 +219,8 @@ bp::structure &bp::structure::operator=(const std::initializer_list<variant_t> &
     return *this;
 }
 
-bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<std::string, variant_t>> &_val) {
-    initialize_val<object_t>();
+bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<std::string, variant>> &_val) {
+    initialize_val<object>();
 
     for (auto item: _val) {
         this->emplace(item.first, item.second);
@@ -173,23 +230,12 @@ bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<st
 }
 
 bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<std::string, structure>> &_val) {
-    initialize_val<object_t>();
+    initialize_val<object>();
 
     for (auto item: _val) {
         this->emplace(item.first, *item.second.data());
     }
     set_type(value_type::Object);
-    return *this;
-}
-
-bp::structure &bp::structure::operator=(const structure::ptr &_str) {
-    operator=(*_str);
-    return *this;
-}
-
-bp::structure &bp::structure::operator=(structure::ptr &&_str) {
-    operator=(*_str);
-    _str.reset();
     return *this;
 }
 
@@ -208,29 +254,21 @@ bp::structure &bp::structure::operator=(structure &&_str) {
     return *this;
 }
 
-bool bp::structure::emplace(const std::initializer_list<std::pair<bp::symbol, variant_t>> &_val) {
-    initialize_if_null(value_type::Object);
-    if (type() == value_type::Object) {
-        for (auto &entry: _val) {
-            emplace(entry.first, entry.second);
-        }
-        return true; //
-    } else {
-        throw std::range_error("not an object");
+bool bp::structure::emplace(const std::initializer_list<std::pair<bp::symbol, variant>> &_val) {
+    emplace_init();
+    for (auto &entry: _val) {
+        emplace(entry.first, entry.second);
     }
+    return true; //
 }
 
-//bool bp::structure::emplace(const std::initializer_list<std::pair<bp::symbol, structure>> &_val) {
-//    initialize_if_null(value_type::Object);
-//    if (type() == value_type::Object) {
-//        for (auto &entry: _val) {
-//            emplace(entry.first, *entry.second.data());
-//        }
-//        return true; //
-//    } else {
-//        throw std::range_error("not an object");
-//    }
-//}
+bool bp::structure::emplace(const std::initializer_list<std::pair<bp::symbol, structure>> &_val) {
+    emplace_init();
+    for (auto &entry: _val) {
+        emplace(entry.first, *entry.second.data());
+    }
+    return true;
+}
 
 bool bp::structure::emplace(symbol &&_key, const bp::structure & _str) {
     if (_str) {
@@ -238,4 +276,24 @@ bool bp::structure::emplace(symbol &&_key, const bp::structure & _str) {
     } else  {
         return emplace(std::forward<symbol>(_key), nullptr);
     }
+}
+
+bp::structure::value_type bp::structure::get_variant_type(const variant &_var) const {
+    return boost::apply_visitor(variant_visitor(), _var);
+}
+
+bp::structure::structure(const structure& _s) : value_type_(_s.value_type_), val_(_s.val_) {
+
+}
+
+bp::structure::structure(structure &&_s) : value_type_(std::move(_s.value_type_)), val_(std::move(_s.val_)) {
+    _s.value_type_ = value_type::Null;
+    _s.val_ = nullptr;
+}
+
+bp::structure bp::structure::deepcopy() const {
+    if (val_) {
+        return structure(clone_variant(val_));
+    }
+    return structure();
 }

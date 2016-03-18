@@ -3,6 +3,31 @@
 
 using namespace bp::literals;
 
+TEST(StructTest, constructors) {
+    bp::structure s;
+    s["a"] = 1;
+
+    bp::structure s_copy(s);
+    bp::structure s_deepcopy(std::move(s.deepcopy()));
+    bp::structure s_move(std::move(s));
+    s_copy["a"]=3;
+
+    ASSERT_EQ(static_cast<bool>(s), false);
+    ASSERT_EQ(static_cast<bool>(s_copy), true);
+    ASSERT_EQ(static_cast<bool>(s_deepcopy), true);
+    ASSERT_EQ(static_cast<bool>(s_move), true);
+    ASSERT_EQ(s_copy.at("a").is_int(), true);
+    ASSERT_EQ(s_deepcopy.at("a").is_int(), true);
+    ASSERT_EQ(s_move.at("a").is_int(), true);
+    ASSERT_EQ(s.is_null(), true);
+    ASSERT_EQ(s_copy.is_object(), true);
+    ASSERT_EQ(s_deepcopy.is_object(), true);
+    ASSERT_EQ(s_move.is_object(), true);
+    ASSERT_EQ(s_copy.at("a").as_int(), 3);
+    ASSERT_EQ(s_deepcopy.at("a").as_int(), 1);
+    ASSERT_EQ(s_move.at("a").as_int(), 3);
+}
+
 TEST(StructTest, object_access) {
     bp::structure s;
     s["a"] = 1;
@@ -22,6 +47,10 @@ TEST(StructTest, object_access) {
     ASSERT_EQ(s.size(), 2) << "bad size afer insertion";
 }
 
+TEST(StructTest, object_access_get) {
+    // TODO
+}
+
 TEST(StructTest, object_erase) {
     bp::structure s;
     s["a"] = 1;
@@ -37,10 +66,12 @@ TEST(StructTest, object_emplace) {
     s1["a"] = 1;
 
     s.emplace("1", 1);
-    s.emplace("str", s1);
+    s.emplace("str", s1.deepcopy());
     s.emplace("a", {1,2,3});
     s.emplace("o", {{"a",1}});
     s.emplace({{"oa", 1}, {"ob", 2}});
+    s.emplace({{"as", s1}});
+    s.at("as").at("a")=2;
 
     ASSERT_EQ(s.at("1").as_int(), 1);
     ASSERT_NO_THROW(s.at("str").at("a"));
@@ -53,11 +84,12 @@ TEST(StructTest, object_emplace) {
     ASSERT_EQ(s.at("o").size(), 1);
     ASSERT_NO_THROW(s.at("o").at("a"));
     ASSERT_EQ(s.at("o").at("a").as_int(), 1);
+    ASSERT_EQ(s.at("as").at("a").as_int(), 2);
 
     ASSERT_EQ(s.at("oa").as_int(), 1);
     ASSERT_EQ(s.at("ob").as_int(), 2);
 
-    ASSERT_EQ(s.size(), 6);
+    ASSERT_EQ(s.size(), 7);
 }
 
 TEST(StructTest, data_types) {
@@ -95,4 +127,32 @@ TEST(StructTest, data_types) {
     ASSERT_EQ(v.as_string(), std::string("str"))  << "as_string(string)";
     ASSERT_EQ(v.as_bool(), false)  << "as_bool(string)";
     ASSERT_EQ(v.as_float(), 0)  << "as_float(string)";
+}
+
+TEST(StructTest, array_access) {
+    //TODO
+}
+
+TEST(StructTest, array_insert) {
+    //TODO
+}
+
+TEST(StructTest, assignment) {
+    // TODO
+}
+
+TEST(StructTest, array_iterator) {
+    // TODO
+}
+
+TEST(StructTest, object_iterator) {
+    // TODO
+}
+
+TEST(StructTest, object_key_iterator) {
+    // TODO
+}
+
+TEST(StructTest, operator_bool) {
+    // TODO
 }

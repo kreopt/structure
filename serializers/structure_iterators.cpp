@@ -1,10 +1,11 @@
 #include "structure.hpp"
 
+using namespace bp::serializable;
 // OBJECT KEYS
 
 bp::structure::object_key_iterator::object_key_iterator(const structure &_object) : object_(_object) {
     if (object_ && object_.is_object()) {
-        it = object_.get_variant<object_ptr>(object_.val_)->begin();
+        it = get_variant<object_ptr>(object_.val_)->begin();
     }
 }
 
@@ -43,7 +44,7 @@ bool bp::structure::object_key_iterator::operator!=(const object_key_iterator& r
 
 bp::structure::object_iterator::object_iterator(const structure &_object) : object_(_object) {
     if (object_ && object_.is_object()) {
-        it = object_.get_variant<object_ptr>(object_.val_)->begin();
+        it = get_variant<object_ptr>(object_.val_)->begin();
     }
 }
 
@@ -64,7 +65,7 @@ bool bp::structure::object_iterator::operator==(const bp::structure::object_iter
     return it==rhs.it;
 }
 
-std::pair<bp::structure::object_t::key_type, bp::structure> bp::structure::object_iterator::operator*() {
+std::pair<object::key_type, bp::structure> bp::structure::object_iterator::operator*() {
     if (!object_ || it==end) {
         return std::make_pair(""_sym, bp::structure());
     }
