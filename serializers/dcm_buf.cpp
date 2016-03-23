@@ -4,6 +4,7 @@
 using size_block = uint32_t;
 
 namespace bp {
+    using namespace serializable;
 
     template<>
     std::string structure::stringify<serializers::Dcm>() const {
@@ -17,7 +18,7 @@ namespace bp {
         size_block sz;
         switch (tp) {
             case value_type::Object: {
-                auto val = get_variant<object_ptr>(val_);
+                auto val = get_variant<bp::serializable::object_ptr>(val_);
                 sz = static_cast<size_block>(val->size());
                 r.append(reinterpret_cast<char *>(&sz), sizeof(size_block));
 
@@ -64,7 +65,7 @@ namespace bp {
         return r;
     };
 
-    structure::variant_ptr parse_variant(std::string::const_iterator &_it) {
+    variant_ptr parse_variant(std::string::const_iterator &_it) {
 
         structure::value_type tp = static_cast<structure::value_type >(_it[0]);
         size_block sz;
@@ -84,7 +85,7 @@ namespace bp {
 
         switch (tp) {
             case structure::value_type::Object: {
-                structure::object_ptr obj = std::make_shared<structure::object_t>();
+                object_ptr obj = std::make_shared<object>();
                 for (int i = 0; i < sz; i++) {
                     size_block key_size = reinterpret_cast<const size_block*>(&(*_it))[0];
                     _it+=sizeof(size_block);
@@ -92,42 +93,42 @@ namespace bp {
                     _it += key_size;
                     obj->emplace(key, parse_variant(_it));
                 }
-                return std::make_shared<structure::variant_t>(obj);
+                return std::make_shared<variant>(obj);
             }
             case structure::value_type::Array: {
-                structure::array_ptr obj = std::make_shared<structure::array_t>();
+                array_ptr obj = std::make_shared<array>();
                 for (int i = 0; i < sz; i++) {
                     obj->emplace_back(parse_variant(_it));
                 }
-                return std::make_shared<structure::variant_t>(obj);
+                return std::make_shared<variant>(obj);
             }
             case structure::value_type::String: {
-                structure::value_ptr obj = std::make_shared<structure::value>(std::string(_it, _it + sz));
+                value_ptr obj = std::make_shared<value>(std::string(_it, _it + sz));
                 _it += sz;
-                return std::make_shared<structure::variant_t>(obj);
+                return std::make_shared<variant>(obj);
             }
             case structure::value_type::Int: {
-                structure::value_ptr obj = std::make_shared<structure::value>(
+                value_ptr obj = std::make_shared<value>(
                         reinterpret_cast<const serializable::int_t *>(&(*_it))[0]);
                 _it += sizeof(serializable::int_t);
-                return std::make_shared<structure::variant_t>(obj);
+                return std::make_shared<variant>(obj);
             }
             case structure::value_type::Float: {
-                structure::value_ptr obj = std::make_shared<structure::value>(
+                value_ptr obj = std::make_shared<value>(
                         reinterpret_cast<const serializable::float_t *>(&(*_it))[0]);
                 _it += sizeof(serializable::float_t);
-                return std::make_shared<structure::variant_t>(obj);
+                return std::make_shared<variant>(obj);
             }
             case structure::value_type::Bool: {
-                structure::value_ptr obj = std::make_shared<structure::value>(*_it ? true : false);
+                value_ptr obj = std::make_shared<value>(*_it ? true : false);
                 _it += 1;
-                return std::make_shared<structure::variant_t>(obj);
+                return std::make_shared<variant>(obj);
             }
             case structure::value_type::Symbol: {
                 symbol key(std::string(_it, _it+sz));
                 _it += sz;
-                structure::value_ptr obj = std::make_shared<structure::value>(key);
-                return std::make_shared<structure::variant_t>(obj);
+                value_ptr obj = std::make_shared<value>(key);
+                return std::make_shared<variant>(obj);
             }
         }
     }

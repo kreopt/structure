@@ -4,6 +4,7 @@
 #include "serializers/json.hpp"
 
 namespace bp {
+    using namespace serializable;
 
     Json::Value build_json(const structure& root) {
         Json::Value r;
@@ -45,30 +46,30 @@ namespace bp {
         return build_json(*this).toStyledString();
     };
 
-    structure::variant_ptr parse_variant(const Json::Value &root) {
+    variant_ptr parse_variant(const Json::Value &root) {
 
         if (root.isArray()) {
-            bp::structure::array_t arr;
+            array arr;
             for (int i = root.size()-1; i>=0; --i) {
                 arr.push_back(parse_variant(root[i]));
             }
-            return std::make_shared<bp::structure::variant_t>(arr);
+            return std::make_shared<variant>(arr);
         } else if (root.isObject()) {
-            bp::structure::object_t obj;
+            object obj;
             for (auto key: root.getMemberNames()) {
                 obj.emplace(bp::symbol(key), parse_variant(root[key]));
             }
-            return std::make_shared<bp::structure::variant_t>(obj);
+            return std::make_shared<variant>(obj);
         } else if (root.isBool()) {
-            return std::make_shared<bp::structure::variant_t>(root.asBool());
+            return std::make_shared<variant>(root.asBool());
         } else if (root.isDouble()) {
-            return std::make_shared<bp::structure::variant_t>(root.asDouble());
+            return std::make_shared<variant>(root.asDouble());
         } else if (root.isIntegral()) {
-            return std::make_shared<bp::structure::variant_t>(static_cast<serializable::int_t>(root.asLargestInt()));
+            return std::make_shared<variant>(static_cast<serializable::int_t>(root.asLargestInt()));
         } else if (root.isNull()) {
-            return std::make_shared<bp::structure::variant_t>(0);
+            return std::make_shared<variant>(0);
         } else if (root.isString()) {
-            return std::make_shared<bp::structure::variant_t>(root.asString());
+            return std::make_shared<variant>(root.asString());
         }
     }
 

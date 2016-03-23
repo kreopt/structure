@@ -20,8 +20,8 @@ int main() {
 
         s.emplace("event", "caps");
     bp::structure ss(s);
-    bp::structure::variant_t var;
-    ss.at("event").set("test");
+    bp::serializable::variant var;
+    ss.at("event")="test";
     ss.get("event", "");
     ss.emplace({
                         {"struct", *s.data()}
