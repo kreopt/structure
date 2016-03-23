@@ -5,6 +5,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 set(BUILD_JSON ON)
 set(BUILD_DCM ON)
 
+set(BPS_VERSION_MAJOR 1)
+set(BPS_VERSION_MINOR 0)
+set(BPS_VERSION_PATCH 0)
+set(BPS_VERSION ${BPS_VERSION_MAJOR}.${BPS_VERSION_MINOR}.${BPS_VERSION_PATCH} )
+
 set(SOURCE_FILES main.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp)
 set(TEST_FILES tests/test_struct.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp)
 
@@ -45,6 +50,8 @@ if (BUILD_DCM)
     install(DIRECTORY include/ DESTINATION include/binelpro/ FILES_MATCHING PATTERN "serializers/dcm_buf.hpp")
     target_link_libraries(serializers bpserializers_dcmbuf)
 ENDIF()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${BPS_VERSION} SOVERSION ${BPS_VERSION_MAJOR} )
 
 set(CMAKECONFIG_INSTALL_DIR "lib/cmake/bpstructure")
 
