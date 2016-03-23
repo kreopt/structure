@@ -57,7 +57,7 @@ variant_ptr clone_variant(const variant_ptr &_ptr) {
     return res;
 }
 
-bp::structure::structure(bp::serializable::variant_ptr _obj) : val_(_obj) {
+bp::structure::structure(bp::serializable::variant_ptr _obj) : val_(_obj), value_type_(value_type::Null) {
     if (_obj) {
         set_type(boost::apply_visitor(variant_visitor(), *val_));
     } else {
@@ -212,20 +212,19 @@ bp::structure bp::structure::at(const symbol &_key) const {
 
 bp::structure &bp::structure::operator=(const std::initializer_list<variant> &_val) {
     initialize_val<array>();
+    set_type(value_type::Array);
     for (auto item: _val) {
         this->append(item);
     }
-    set_type(value_type::Array);
     return *this;
 }
 
 bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<std::string, variant>> &_val) {
     initialize_val<object>();
-
+    set_type(value_type::Object);
     for (auto item: _val) {
         this->emplace(item.first, item.second);
     }
-    set_type(value_type::Object);
     return *this;
 }
 

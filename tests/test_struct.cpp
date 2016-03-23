@@ -1,7 +1,9 @@
 #include "structure.hpp"
 #include <gtest/gtest.h>
+#include <string>
 
 using namespace bp::literals;
+using namespace std::string_literals;
 
 TEST(StructTest, constructors) {
     bp::structure s;
@@ -48,7 +50,13 @@ TEST(StructTest, object_access) {
 }
 
 TEST(StructTest, object_access_get) {
-    // TODO
+    bp::structure s;
+    s["a"] = 1;
+
+    ASSERT_EQ(s.get("b").as_string(), ""s);
+    ASSERT_EQ(s.get("b", 1).as_int(), 1);
+    ASSERT_EQ(s.get("a"), 1);
+    ASSERT_EQ(s.get("a", 2), 1);
 }
 
 TEST(StructTest, object_erase) {
@@ -130,29 +138,92 @@ TEST(StructTest, data_types) {
 }
 
 TEST(StructTest, array_access) {
-    //TODO
+    bp::structure s;
+    s["a"]={1,2,3};
+    ASSERT_EQ(s.at("a").size(), 3);
+    ASSERT_EQ(s.at("a")[0].as_int(), 1);
+    ASSERT_EQ(s.at("a")[1].as_int(), 2);
+    ASSERT_EQ(s.at("a")[2].as_int(), 3);
+    ASSERT_EQ(s["a"][0].as_int(), 1);
+    ASSERT_EQ(s["a"][1].as_int(), 2);
+    ASSERT_EQ(s["a"][2].as_int(), 3);
 }
 
 TEST(StructTest, array_insert) {
-    //TODO
+    bp::structure s;
+    s["a"]={1,2,3};
+    ASSERT_NO_THROW(s["a"].append(4));
+    ASSERT_THROW(s.append({2,3,4}), std::range_error);
+    ASSERT_EQ(s["a"].size(), 4);
+    ASSERT_EQ(s["a"][3].as_int(), 4);
+
+    s["a"].append({2,3});
+    ASSERT_TRUE(s["a"][4].is_array());
+    ASSERT_EQ(s["a"][4][0].as_int(), 2);
+    ASSERT_EQ(s["a"][4][1].as_int(), 3);
+    s["a"].append({{"a",3}});
+    ASSERT_TRUE(s["a"][5].is_object());
+    ASSERT_EQ(s["a"][5]["a"].as_int(), 3);
 }
 
 TEST(StructTest, assignment) {
-    // TODO
+    bp::structure s;
+    ASSERT_TRUE(s.is_null()) << "check is null";
+    s = 1;
+    ASSERT_TRUE(s.is_int()) << "check is int";
+    ASSERT_EQ(s.as_int(), 1);
+    s = 1.0;
+    ASSERT_TRUE(s.is_float()) << "check is float";
+    ASSERT_EQ(s.as_float(), 1.0);
+    s = "s";
+    ASSERT_TRUE(s.is_string()) << "check is string";
+    ASSERT_EQ(s.as_string(), "s");
+    s = {1,2};
+    ASSERT_TRUE(s.is_array()) << "check is array";
+    ASSERT_EQ(s[0].as_int(), 1);
+    s = {{"a", "b"}};
+    ASSERT_TRUE(s.is_object()) << "check is object";
+    ASSERT_EQ(s["a"].as_string(), "b");
 }
 
 TEST(StructTest, array_iterator) {
-    // TODO
+    bp::structure s;
+    s={1,2,3};
+    uint i=1;
+    auto arr_it = s.as_array();
+    ASSERT_TRUE(arr_it.begin() != arr_it.end());
+    for (auto v: s.as_array()) {
+        ASSERT_EQ(i, v.as_int());
+        i++;
+    }
 }
 
 TEST(StructTest, object_iterator) {
-    // TODO
+    bp::structure s;
+    s={{"a",1},{"b",2},{"c",3}};
+    std::unordered_map<std::string, uint> kvs{{"a",1},{"b",2},{"c",3}};
+    auto obj_it = s.as_object();
+    ASSERT_TRUE(obj_it.begin() != obj_it.end());
+    for (auto kv: s.as_object()) {
+        ASSERT_TRUE(kvs.count(kv.first)>0);
+        ASSERT_EQ(kvs[kv.first], kv.second.as_int());
+    }
 }
 
 TEST(StructTest, object_key_iterator) {
-    // TODO
+    bp::structure s;
+    s={{"a",1},{"b",2},{"c",3}};
+    std::vector<std::string> keys{"a","b","c"};
+    auto obj_it = s.keys();
+    ASSERT_TRUE(obj_it.begin() != obj_it.end());
+    for (auto k: s.keys()) {
+        ASSERT_TRUE(std::find(keys.begin(), keys.end(), k)!=keys.end());
+    }
 }
 
 TEST(StructTest, operator_bool) {
-    // TODO
+    bp::structure s;
+    ASSERT_FALSE(static_cast<bool>(s));
+    s = 1;
+    ASSERT_TRUE(static_cast<bool>(s));
 }

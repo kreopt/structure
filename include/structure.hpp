@@ -100,10 +100,10 @@ namespace bp {
         }
     }
 
-
     class structure {
     public:
         using ptr = std::shared_ptr<structure>;
+        using wptr = std::weak_ptr<structure>;
 
         enum class value_type: char {
             Int = 'i',
@@ -293,31 +293,31 @@ namespace bp {
         // ITERATORS
 
         class object_key_iterator : public std::iterator<std::input_iterator_tag, const char*> {
-            const structure &object_;
+            const structure*  object_;
             serializable::object::iterator    it;
             serializable::object::iterator    end;
         public:
-            object_key_iterator(const structure &_object);
+            object_key_iterator(const structure *_object);
             object_key_iterator(const object_key_iterator&_it);
             object_key_iterator & operator++();
             object_key_iterator operator++(int);
-            bool operator==(const object_key_iterator& rhs);
-            bool operator!=(const object_key_iterator& rhs);
+            bool operator==(const object_key_iterator& rhs) const;
+            bool operator!=(const object_key_iterator& rhs) const;
             const char * operator*();
         };
 
         // TODO: methods to conform forward iterator interface
         class object_iterator : public std::iterator<std::forward_iterator_tag, structure> {
-            const structure &object_;
+            const structure* object_;
             serializable::object::iterator    it;
             serializable::object::iterator    end;
         public:
-            object_iterator(const structure &_object);
+            object_iterator(const structure *_object);
             object_iterator(const object_iterator&_it);
             object_iterator & operator++();
             object_iterator operator++(int);
-            bool operator==(const object_iterator& rhs);
-            bool operator!=(const object_iterator& rhs);
+            bool operator==(const object_iterator& rhs) const;
+            bool operator!=(const object_iterator& rhs) const;
             std::pair<bp::serializable::object::key_type, bp::structure>  operator*();
 
             /////
@@ -327,16 +327,18 @@ namespace bp {
 
         // TODO: methods to conform random access iterator interface
         class array_iterator : public std::iterator<std::random_access_iterator_tag, structure> {
-            const structure &object_;
-            size_t  index;
-            size_t  size;
+            const structure* object_;
+            serializable::array::iterator    it;
+            serializable::array::iterator    end;
+//            size_t  index;
+//            size_t  size;
         public:
-            array_iterator(const structure &_object);
+            array_iterator(const structure *_object);
             array_iterator(const array_iterator&_it);
             array_iterator & operator++();
             array_iterator operator++(int);
-            bool operator==(const array_iterator& rhs);
-            bool operator!=(const array_iterator& rhs);
+            bool operator==(const array_iterator& rhs) const;
+            bool operator!=(const array_iterator& rhs) const;
             bp::structure  operator*();
 
             /////
@@ -376,11 +378,11 @@ namespace bp {
             iterable(const iterator_type &_it) : it_(_it){}
             iterable(const iterable &_it) : it_(_it.it_) {}
             iterator_type begin() const {return it_;}
-            iterator_type end() const { return iterator_type(structure());}
+            iterator_type end() const { return iterator_type(nullptr);}
         };
         template <typename iterator_type>
         iterable<iterator_type> get_iterable() {
-            return iterable<iterator_type>(iterator_type(*this));
+            return iterable<iterator_type>(iterator_type(this));
         }
 
     public:
