@@ -57,7 +57,7 @@ variant_ptr clone_variant(const variant_ptr &_ptr) {
     return res;
 }
 
-bp::structure::structure(bp::serializable::variant_ptr _obj) : val_(_obj), value_type_(value_type::Null) {
+bp::structure::structure(bp::serializable::variant_ptr _obj) : value_type_(value_type::Null), val_(_obj) {
     if (_obj) {
         set_type(boost::apply_visitor(variant_visitor(), *val_));
     } else {

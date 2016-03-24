@@ -17,7 +17,7 @@ namespace bp {
                 break;
             }
             case structure::value_type::Array: {
-                for (int i=0; i<root.size(); ++i) {
+                for (uint i=0; i<root.size(); ++i) {
                     r.append(build_json(root.at(i)));
                 }
                 break;
@@ -71,6 +71,7 @@ namespace bp {
         } else if (root.isString()) {
             return std::make_shared<variant>(root.asString());
         }
+        return std::make_shared<variant>(0);
     }
 
     template<>

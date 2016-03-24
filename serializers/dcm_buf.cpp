@@ -33,7 +33,7 @@ namespace bp {
             case value_type::Array: {
                 sz = static_cast<size_block>(this->size());
                 r.append(reinterpret_cast<char *>(&sz), sizeof(size_block));
-                for (int i = 0; i < sz; i++) {
+                for (uint i = 0; i < sz; i++) {
                     r.append(this->at(i).stringify<serializers::Dcm>());
                 }
                 break;
@@ -68,7 +68,7 @@ namespace bp {
     variant_ptr parse_variant(std::string::const_iterator &_it) {
 
         structure::value_type tp = static_cast<structure::value_type >(_it[0]);
-        size_block sz;
+        size_block sz = 0;
         _it++;
 
         switch (tp) {
@@ -86,7 +86,7 @@ namespace bp {
         switch (tp) {
             case structure::value_type::Object: {
                 object_ptr obj = std::make_shared<object>();
-                for (int i = 0; i < sz; i++) {
+                for (uint i = 0; i < sz; i++) {
                     size_block key_size = reinterpret_cast<const size_block*>(&(*_it))[0];
                     _it+=sizeof(size_block);
                     symbol key(std::string(_it, _it+key_size));
@@ -97,7 +97,7 @@ namespace bp {
             }
             case structure::value_type::Array: {
                 array_ptr obj = std::make_shared<array>();
-                for (int i = 0; i < sz; i++) {
+                for (uint i = 0; i < sz; i++) {
                     obj->emplace_back(parse_variant(_it));
                 }
                 return std::make_shared<variant>(obj);
@@ -130,7 +130,11 @@ namespace bp {
                 value_ptr obj = std::make_shared<value>(key);
                 return std::make_shared<variant>(obj);
             }
+            case structure::value_type::Null: {
+                return std::make_shared<variant>(nullptr);
+            }
         }
+        return std::make_shared<variant>(nullptr);
     }
 
     template<>
