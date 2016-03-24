@@ -206,7 +206,7 @@ TEST(StructTest, object_iterator) {
     ASSERT_TRUE(obj_it.begin() != obj_it.end());
     for (auto kv: s.as_object()) {
         ASSERT_TRUE(kvs.count(kv.first)>0);
-        ASSERT_EQ(kvs[kv.first], kv.second.as_int());
+        ASSERT_EQ(kvs[kv.first.name()], kv.second.as_int());
     }
 }
 

@@ -210,7 +210,7 @@ namespace bp {
 
         template <typename KeyType,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<KeyType>, bp::symbol>::value>::type>
-        bool emplace(KeyType &&_key, const std::initializer_list<std::pair<bp::symbol, serializable::variant>> &_val = nullptr) {
+        bool emplace(KeyType &&_key, const std::initializer_list<std::pair<bp::symbol, serializable::variant>> &_val) {
             emplace_init();
             serializable::object_ptr obj = std::make_shared<serializable::object>();
             for (auto item: _val) {
@@ -221,7 +221,7 @@ namespace bp {
 
         template <typename KeyType,
                 class = typename std::enable_if<std::is_convertible<std::remove_reference_t<KeyType>, bp::symbol>::value>::type>
-        bool emplace(KeyType &&_key, const std::initializer_list<std::pair<bp::symbol, bp::structure>> &_val = nullptr) {
+        bool emplace(KeyType &&_key, const std::initializer_list<std::pair<bp::symbol, bp::structure>> &_val) {
             emplace_init();
             serializable::object_ptr obj = std::make_shared<serializable::object>();
             for (auto item: _val) {
