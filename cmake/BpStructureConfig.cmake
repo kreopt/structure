@@ -5,16 +5,32 @@
 #  BPSTRUCTURE_LIBRARIES - The libraries needed to use DCM IPC
 #  BPSTRUCTURE_DEFINITIONS - Compiler switches required for using DCM IPC
 
-set(BPSTRUCTURE_INSTALL_PREFIX "/usr/local")
 set(CMAKECONFIG_INSTALL_DIR "lib/cmake/bpstructure")
 
-find_path(BPSTRUCTURE_INCLUDE_DIR ${BPUTIL_INSTALL_PREFIX}/binelpro/structure.hpp PATH_SUFFIXES binelpro )
+find_path(BPSTRUCTURE_INCLUDE_DIRS
+        NAMES binelpro/structure.hpp
+        DOC "binelpro structure dir"
+        PATHS /usr/local/include /usr/include
+        )
 
-#include(${BPSERIALIZERS_INSTALL_PREFIX}/${CMAKECONFIG_INSTALL_DIR}/ExtLibs.cmake)
-
-set(BPSTRUCTURE_INCLUDE_DIRS  ${BPSTRUCTURE_INCLUDE_DIR})
-set(BPSTRUCTURE_LIBRARIES  ${BPSTRUCTURE_EXT_LIBRARIES} ${BPSTRUCTURE_INSTALL_PREFIX}/lib/binelpro/libbpstructure.so)
-set(BPSTRUCTURE_LIBRARIES_JSON  ${BPSTRUCTURE_INSTALL_PREFIX}/lib/binelpro/libbpserializers_json.so)
-set(BPSTRUCTURE_LIBRARIES_DCM  ${BPSTRUCTURE_INSTALL_PREFIX}/lib/binelpro/libbpserializers_dcmbuf.so)
+find_library(
+        BPSTRUCTURE_LIBRARIES
+        NAMES bpstructure
+        DOC "bpstructure library"
+        PATH_SUFFIXES binelpro/
+)
+find_library(
+        BPSTRUCTURE_LIBRARIES_JSON
+        NAMES bpserializers_json
+        DOC "JSON serializer library"
+        PATH_SUFFIXES binelpro/
+)
+find_library(
+        BPSTRUCTURE_LIBRARIES_DCM
+        NAMES bpserializers_dcmbuf
+        DOC "DCM serializer library"
+        PATH_SUFFIXES binelpro/
+)
+include(${BPUTIL_INCLUDE_DIRS}/../${CMAKECONFIG_INSTALL_DIR}/ExtLibs.cmake)
 
 mark_as_advanced(BPSTRUCTURE_INCLUDE_DIR OS_SPECIFIC)

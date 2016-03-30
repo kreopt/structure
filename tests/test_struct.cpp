@@ -219,6 +219,9 @@ TEST(StructTest, object_key_iterator) {
     for (auto k: s.keys()) {
         ASSERT_TRUE(std::find(keys.begin(), keys.end(), k)!=keys.end());
     }
+    for (const auto k: s.keys()) {
+        ASSERT_TRUE(std::find(keys.begin(), keys.end(), k)!=keys.end());
+    }
 }
 
 TEST(StructTest, operator_bool) {

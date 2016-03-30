@@ -17,7 +17,7 @@ namespace bp {
                 break;
             }
             case structure::value_type::Array: {
-                for (uint i=0; i<root.size(); ++i) {
+                for (uint32_t i=0; i<root.size(); ++i) {
                     r.append(build_json(root.at(i)));
                 }
                 break;
