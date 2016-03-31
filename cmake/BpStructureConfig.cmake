@@ -31,6 +31,6 @@ find_library(
         DOC "DCM serializer library"
         PATH_SUFFIXES binelpro/
 )
-include(${BPUTIL_INCLUDE_DIRS}/../${CMAKECONFIG_INSTALL_DIR}/ExtLibs.cmake)
+include(${BPSTRUCTURE_INCLUDE_DIRS}/../${CMAKECONFIG_INSTALL_DIR}/ExtLibs.cmake)
 
 mark_as_advanced(BPSTRUCTURE_INCLUDE_DIR OS_SPECIFIC)
