@@ -3,7 +3,6 @@
 #include <string>
 
 using namespace bp::literals;
-using namespace std::string_literals;
 
 TEST(StructTest, constructors) {
     bp::structure s;
@@ -53,7 +52,7 @@ TEST(StructTest, object_access_get) {
     bp::structure s;
     s["a"] = 1;
 
-    ASSERT_EQ(s.get("b").as_string(), ""s);
+    ASSERT_EQ(s.get("b").as_string(), std::string(""));
     ASSERT_EQ(s.get("b", 1).as_int(), 1);
     ASSERT_EQ(s.get("a"), 1);
     ASSERT_EQ(s.get("a", 2), 1);

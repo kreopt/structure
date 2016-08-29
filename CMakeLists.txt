@@ -1,22 +1,27 @@
 cmake_minimum_required(VERSION 3.2)
 project(bpstructure)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(BUILD_JSON ON)
-set(BUILD_DCM ON)
+set(BUILD_DCM OFF)
 set(BUILD_TEST ON)
+option(USE_BOOST_VARIANT ON)
 
 set(BpStructure_VERSION_MAJOR 1)
 set(BpStructure_VERSION_MINOR 0)
 set(BpStructure_VERSION_PATCH 0)
 set(BpStructure_VERSION ${BpStructure_VERSION_MAJOR}.${BpStructure_VERSION_MINOR}.${BpStructure_VERSION_PATCH} )
 
-set(SOURCE_FILES main.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp)
-set(TEST_FILES tests/test_struct.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp)
+set(SOURCE_FILES main.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp include/variant.hpp)
+set(TEST_FILES tests/test_struct.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp include/variant.hpp)
 
 
 find_package(BpUtil 1.0 REQUIRED)
 include_directories(include )
+
+if (USE_BOOST_VARIANT)
+    add_definitions(-DUSE_BOOST_VARIANT)
+endif()
 
 #add_executable(serializers ${SOURCE_FILES})
 if (BUILD_TEST)

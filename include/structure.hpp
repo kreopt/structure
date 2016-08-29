@@ -5,11 +5,22 @@
 #include <iterator>
 #include <unordered_map>
 #include <vector>
-#include <boost/variant.hpp>
 #include <binelpro/symbol.hpp>
 #include <binelpro/util.hpp>
+#include "variant.hpp"
+
+#if __cplusplus < 201403L
+namespace std {
+    template <typename T>
+    using remove_reference_t = typename remove_reference<T>::type;
+
+    template <typename T>
+    using remove_cv_t = typename remove_cv<T>::type;
+}
+#endif
 
 namespace bp {
+
     using namespace bp::literals;
 
     namespace serializable {
@@ -37,66 +48,54 @@ namespace bp {
         using array = std::vector<variant_ptr>;
         using array_ptr = std::shared_ptr<array>;
 
-        class variant : public boost::variant<value_ptr, object_ptr, array_ptr> {
+        namespace {
+            template <typename T>
+            using is_variant_ptr_type_t = typename std::enable_if<bp::is_any_of<T, array_ptr, object_ptr, value_ptr>::value>::type;
+
+            template <typename T>
+            using is_variant_type_t = typename std::enable_if<
+                    bp::is_any_of<
+                            std::remove_cv_t<std::remove_reference_t<T>>,
+                            value, object, array>::value
+            >::type;
+        }
+
+        class variant : public bp::variant<value_ptr, object_ptr, array_ptr> {
+            using base = bp::variant<value_ptr, object_ptr, array_ptr>;
         public:
-            variant() : boost::variant<value_ptr, object_ptr, array_ptr>(std::make_shared<value>(0)) { }
+            variant() : base(std::make_shared<value>(0)) { }
 
-            variant(const serializable::int_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(
-                    std::make_shared<value>(_val)) { }
+            variant(const serializable::int_t &_val) : base(std::make_shared<value>(_val)) { }
 
-            variant(const serializable::float_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(
-                    std::make_shared<value>(_val)) { }
+            variant(const serializable::float_t &_val) : base(std::make_shared<value>(_val)) { }
 
-            variant(const serializable::bool_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(
-                    std::make_shared<value>(_val)) { }
+            variant(const serializable::bool_t &_val) : base(std::make_shared<value>(_val)) { }
 
-            variant(const serializable::symbol &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(
-                    std::make_shared<value>(_val)) { }
+            variant(const serializable::symbol &_val) : base(std::make_shared<value>(_val)) { }
 
-            variant(const serializable::string_t &_val) : boost::variant<value_ptr, object_ptr, array_ptr>(
-                    std::make_shared<value>(_val)) { }
+            variant(const serializable::string_t &_val) : base(std::make_shared<value>(_val)) { }
 
-            variant(const char *_val) : boost::variant<value_ptr, object_ptr, array_ptr>(
-                    _val ? std::make_shared<value>(std::string(_val)) : nullptr) { }
+            variant(const char *_val) : base(_val ? std::make_shared<value>(std::string(_val)) : nullptr) { }
 
-            template<typename ValueType,
-                    class = typename std::enable_if<
-                            bp::is_any_of<
-                                    std::remove_cv_t<std::remove_reference_t<ValueType>>,
-                                    value, object, array>::value
-                    >::type>
-            variant(const std::shared_ptr<ValueType> &_val) :
-                    boost::variant<value_ptr, object_ptr, array_ptr>(_val) { }
+            template<typename ValueType, class = is_variant_type_t<ValueType>>
+            variant(const std::shared_ptr<ValueType> &_val) : base(_val) { }
 
-            template<typename ValueType,
-                    class = typename std::enable_if<
-                            bp::is_any_of<
-                                    std::remove_cv_t<std::remove_reference_t<ValueType>>,
-                                    value, object, array>::value
-                    >::type>
-            variant(std::shared_ptr<ValueType> &&_val) :
-                    boost::variant<value_ptr, object_ptr, array_ptr>(std::forward<std::shared_ptr<ValueType>>(_val)) { }
+            template<typename ValueType, class = is_variant_type_t<ValueType>>
+            variant(std::shared_ptr<ValueType> &&_val) : base(std::forward<std::shared_ptr<ValueType>>(_val)) { }
 
-            template<typename ValueType,
-                    class = typename std::enable_if<
-                            bp::is_any_of<
-                                    std::remove_cv_t<std::remove_reference_t<ValueType>>,
-                                    value, object, array>::value
-                    >::type>
-            variant(ValueType &&_val) :
-                    boost::variant<value_ptr, object_ptr, array_ptr>(
-                            std::make_shared<std::remove_reference_t<ValueType>>(std::forward<ValueType>(_val))
-                    ) { }
+            template<typename ValueType, class = is_variant_type_t<ValueType>>
+            variant(ValueType &&_val) : base(std::make_shared<std::remove_reference_t<ValueType>>(
+                    std::forward<ValueType>(_val))) { }
         };
 
-        template <typename V, class = typename std::enable_if<bp::is_any_of<V, array_ptr, object_ptr, value_ptr>::value>::type>
+        template <typename V, class = is_variant_ptr_type_t<V>>
         V get_variant(const variant_ptr &_val) {
-            return boost::get<V>(*_val);
+            return bp::get<V>(*_val);
         }
 
         template <typename V>
         V get_value(const variant_ptr &_val) {
-            return boost::get<V>(*get_variant<value_ptr>(_val));
+            return bp::get<V>(*get_variant<value_ptr>(_val));
         }
     }
 
@@ -116,7 +115,7 @@ namespace bp {
             Symbol = 'S'
         };
 
-        structure(serializable::variant_ptr _obj = nullptr);
+        explicit structure(serializable::variant_ptr _obj = nullptr);
         structure(const structure& _s);
         structure(structure &&_s);
 

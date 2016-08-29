@@ -127,9 +127,9 @@ bool bp::structure::append(const std::initializer_list<bp::serializable::variant
     if (type() == value_type::Array) {
         array_ptr arr = std::make_shared<array>();
         for (auto item: _val) {
-            arr->push_back(std::make_shared<variant>(item));
+            arr->push_back(std::make_shared<bp::serializable::variant>(item));
         }
-        get_variant<array_ptr>(val_)->push_back(std::make_shared<variant>(arr));
+        get_variant<array_ptr>(val_)->push_back(std::make_shared<bp::serializable::variant>(arr));
         return true;
     } else {
         throw std::range_error("not an array");
@@ -141,9 +141,9 @@ bool bp::structure::append(const std::initializer_list<std::pair<std::string, bp
     if (type() == value_type::Array) {
         object_ptr obj = std::make_shared<object>();
         for (auto item: _val) {
-            obj->emplace(bp::symbol(item.first), std::make_shared<variant>(item.second));
+            obj->emplace(bp::symbol(item.first), std::make_shared<bp::serializable::variant>(item.second));
         }
-        get_variant<array_ptr>(val_)->push_back(std::make_shared<variant>(obj));
+        get_variant<array_ptr>(val_)->push_back(std::make_shared<bp::serializable::variant>(obj));
         return true;
     } else {
         throw std::range_error("not an array");
@@ -210,7 +210,7 @@ bp::structure bp::structure::at(const symbol &_key) const {
     }
 }
 
-bp::structure &bp::structure::operator=(const std::initializer_list<variant> &_val) {
+bp::structure &bp::structure::operator=(const std::initializer_list<bp::serializable::variant> &_val) {
     initialize_val<array>();
     set_type(value_type::Array);
     for (auto item: _val) {
@@ -219,7 +219,7 @@ bp::structure &bp::structure::operator=(const std::initializer_list<variant> &_v
     return *this;
 }
 
-bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<std::string, variant>> &_val) {
+bp::structure &bp::structure::operator=(const std::initializer_list<std::pair<std::string, bp::serializable::variant>> &_val) {
     initialize_val<object>();
     set_type(value_type::Object);
     for (auto item: _val) {
@@ -253,7 +253,7 @@ bp::structure &bp::structure::operator=(structure &&_str) {
     return *this;
 }
 
-bool bp::structure::emplace(const std::initializer_list<std::pair<bp::symbol, variant>> &_val) {
+bool bp::structure::emplace(const std::initializer_list<std::pair<bp::symbol, bp::serializable::variant>> &_val) {
     emplace_init();
     for (auto &entry: _val) {
         emplace(entry.first, entry.second);
@@ -277,7 +277,7 @@ bool bp::structure::emplace(symbol &&_key, const bp::structure & _str) {
     }
 }
 
-bp::structure::value_type bp::structure::get_variant_type(const variant &_var) const {
+bp::structure::value_type bp::structure::get_variant_type(const bp::serializable::variant &_var) const {
     return boost::apply_visitor(variant_visitor(), _var);
 }
 

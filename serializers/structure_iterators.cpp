@@ -117,7 +117,7 @@ bp::structure bp::structure::array_iterator::operator*() {
     if (!object_) {
         return bp::structure();
     }
-    return *it;
+    return bp::structure(*it);
 }
 
 bool bp::structure::array_iterator::operator!=(const bp::structure::array_iterator& rhs) const {
