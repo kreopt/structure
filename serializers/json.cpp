@@ -53,25 +53,25 @@ namespace bp {
             for (int i = root.size()-1; i>=0; --i) {
                 arr.push_back(parse_variant(root[i]));
             }
-            return std::make_shared<variant>(arr);
+            return std::make_shared<tree>(arr);
         } else if (root.isObject()) {
             object obj;
             for (auto key: root.getMemberNames()) {
                 obj.emplace(bp::symbol(key), parse_variant(root[key]));
             }
-            return std::make_shared<variant>(obj);
+            return std::make_shared<tree>(obj);
         } else if (root.isBool()) {
-            return std::make_shared<variant>(root.asBool());
+            return std::make_shared<tree>(root.asBool());
         } else if (root.isDouble()) {
-            return std::make_shared<variant>(root.asDouble());
+            return std::make_shared<tree>(root.asDouble());
         } else if (root.isIntegral()) {
-            return std::make_shared<variant>(static_cast<serializable::int_t>(root.asLargestInt()));
+            return std::make_shared<tree>(static_cast<serializable::int_t>(root.asLargestInt()));
         } else if (root.isNull()) {
-            return std::make_shared<variant>(0);
+            return std::make_shared<tree>(0);
         } else if (root.isString()) {
-            return std::make_shared<variant>(root.asString());
+            return std::make_shared<tree>(root.asString());
         }
-        return std::make_shared<variant>(0);
+        return std::make_shared<tree>(0);
     }
 
     template<>
