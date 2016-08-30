@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.2)
 project(bpstructure)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(BUILD_JSON ON)
-set(BUILD_DCM OFF)
-set(BUILD_TEST ON)
-option(USE_BOOST_VARIANT ON)
+
+option(BUILD_JSON "build json serializer" ON)
+option(BUILD_DCM "build dcm serializer" OFF)
+option(BUILD_TEST "build tests" ON)
+option(USE_BOOST_VARIANT "use boost variant" ON)
 
 set(BpStructure_VERSION_MAJOR 1)
 set(BpStructure_VERSION_MINOR 0)

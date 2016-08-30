@@ -1,6 +1,7 @@
 #include "structure.hpp"
 #include <gtest/gtest.h>
 #include <string>
+#include <algorithm>
 
 using namespace bp::literals;
 
