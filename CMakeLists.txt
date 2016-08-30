@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 project(bpstructure)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++11")
 
 option(BUILD_JSON "build json serializer" ON)
 option(BUILD_DCM "build dcm serializer" OFF)

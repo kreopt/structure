@@ -4,16 +4,16 @@ using namespace bp::serializable;
 
 struct value_type_visitor {
     using result_type = bp::structure::value_type;
-    bp::structure::value_type operator()(bp::serializable::int_t _val) const { return bp::structure::value_type::Int; }
-    bp::structure::value_type operator()(bp::serializable::int_t &&_val) const { return bp::structure::value_type::Int; }
-    bp::structure::value_type operator()(bp::serializable::float_t _val) const { return bp::structure::value_type::Float; }
-    bp::structure::value_type operator()(bp::serializable::float_t &&_val) const { return bp::structure::value_type::Float; }
-    bp::structure::value_type operator()(bp::serializable::bool_t _val) const { return bp::structure::value_type::Bool; }
-    bp::structure::value_type operator()(bp::serializable::bool_t &&_val) const { return bp::structure::value_type::Bool; }
-    bp::structure::value_type operator()(const bp::serializable::symbol &_val) const { return bp::structure::value_type::Symbol; }
-    bp::structure::value_type operator()(bp::serializable::symbol &&_val) const { return bp::structure::value_type::Symbol; }
-    bp::structure::value_type operator()(const bp::serializable::string_t & _val) const { return bp::structure::value_type::String; }
-    bp::structure::value_type operator()(bp::serializable::string_t && _val) const { return bp::structure::value_type::String; }
+    bp::structure::value_type operator()(bp::serializable::int_t ) const { return bp::structure::value_type::Int; }
+    bp::structure::value_type operator()(bp::serializable::int_t &&) const { return bp::structure::value_type::Int; }
+    bp::structure::value_type operator()(bp::serializable::float_t ) const { return bp::structure::value_type::Float; }
+    bp::structure::value_type operator()(bp::serializable::float_t &&) const { return bp::structure::value_type::Float; }
+    bp::structure::value_type operator()(bp::serializable::bool_t ) const { return bp::structure::value_type::Bool; }
+    bp::structure::value_type operator()(bp::serializable::bool_t &&) const { return bp::structure::value_type::Bool; }
+    bp::structure::value_type operator()(const bp::serializable::symbol &) const { return bp::structure::value_type::Symbol; }
+    bp::structure::value_type operator()(bp::serializable::symbol &&) const { return bp::structure::value_type::Symbol; }
+    bp::structure::value_type operator()(const bp::serializable::string_t & ) const { return bp::structure::value_type::String; }
+    bp::structure::value_type operator()(bp::serializable::string_t && ) const { return bp::structure::value_type::String; }
 };
 
 struct variant_visitor {
@@ -27,9 +27,9 @@ struct variant_visitor {
         }
     }
 
-    bp::structure::value_type operator()(object_ptr _val) const { return bp::structure::value_type::Object; }
+    bp::structure::value_type operator()(object_ptr ) const { return bp::structure::value_type::Object; }
 
-    bp::structure::value_type operator()(array_ptr _val) const { return bp::structure::value_type::Array; }
+    bp::structure::value_type operator()(array_ptr ) const { return bp::structure::value_type::Array; }
 };
 
 variant_ptr clone_variant(const variant_ptr &_ptr) {
