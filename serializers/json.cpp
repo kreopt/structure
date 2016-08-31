@@ -50,7 +50,7 @@ namespace bp {
 
         if (root.isArray()) {
             array arr;
-            for (int i = root.size()-1; i>=0; --i) {
+            for (int i = 0, len=root.size(); i < len; ++i)  {
                 arr.push_back(parse_variant(root[i]));
             }
             return std::make_shared<tree>(arr);
