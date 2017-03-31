@@ -1,22 +1,13 @@
-#include "structure.hpp"
-#ifdef ARDUINO_JSON
-#include "serializers/json_arduino.hpp"
-#else
-#include "serializers/json.hpp"
-#endif
+#include "lib/util/structure.hpp"
+#include "lib/util/serializers/json_arduino.hpp"
 #include <gtest/gtest.h>
 #include <string>
 #include <algorithm>
-#include <binelpro/symbol.hpp>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 using namespace bp::literals;
 
-#ifdef ARDUINO_JSON
-constexpr bp::symbol::hash_type SerializerType = bp::serializers::JsonArduino;
-#else
-constexpr bp::hash_type SerializerType = bp::serializers::Json;
-#endif
+constexpr bp::hash_type SerializerType = bp::serializers::JsonArduino;
 TEST(JsonTest, serializer) {
     bp::structure s;
     s.emplace("1", 1);
@@ -72,7 +63,7 @@ TEST(StructTest, parser) {
     ASSERT_TRUE(s["o"].is_object());
     ASSERT_EQ(s["o"].get<int>("a"_h, 0), 1);
 
-    auto pkt = bp::structure::create_from_string<SerializerType>("{\"cmd\":\"status\"}");
+    auto pkt = bp::structure::create_from_string<bp::serializers::JsonArduino>("{\"cmd\":\"status\"}");
     ASSERT_TRUE(pkt.has_key("cmd"_h));
     ASSERT_EQ(pkt.get<std::string>("cmd"_h), "status");
 }

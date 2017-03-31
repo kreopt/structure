@@ -1,5 +1,5 @@
 #include <sstream>
-#include <json/json.h>
+#include <jsoncpp/json/json.h>
 #include "structure.hpp"
 #include "serializers/json.hpp"
 
@@ -24,15 +24,13 @@ namespace bp {
             }
             default: {
                 if (root.is_string()) {
-                    r = root.as_string();
+                    r = root.as<std::string>();
                 } else if (root.is_int()) {
-                    r = root.as_int();
+                    r = root.as<int>();
                 } else if (root.is_float()) {
-                    r = root.as_float();
+                    r = root.as<float>();
                 } else if (root.is_bool()) {
-                    r = root.as_bool();
-                } else if (root.is_symbol()) {
-                    r = root.as_string();
+                    r = root.as<bool>();
                 }
                 break;
             }
@@ -42,11 +40,11 @@ namespace bp {
 
 
     template<>
-    std::string structure::stringify<serializers::Json>() const {
+    std::string structure::serialize<serializers::Json>() const {
         return build_json(*this).toStyledString();
     };
 
-    variant_ptr parse_variant(const Json::Value &root) {
+    tree_ptr parse_variant(const Json::Value &root) {
 
         if (root.isArray()) {
             array arr;
@@ -57,13 +55,13 @@ namespace bp {
         } else if (root.isObject()) {
             object obj;
             for (auto key: root.getMemberNames()) {
-                obj.emplace(bp::symbol(key), parse_variant(root[key]));
+                obj.emplace(bp::symbol(key).to_hash(), parse_variant(root[key]));
             }
             return std::make_shared<tree>(obj);
         } else if (root.isBool()) {
             return std::make_shared<tree>(root.asBool());
         } else if (root.isDouble()) {
-            return std::make_shared<tree>(root.asDouble());
+            return std::make_shared<tree>(static_cast<float>(root.asDouble()));
         } else if (root.isIntegral()) {
             return std::make_shared<tree>(static_cast<serializable::int_t>(root.asLargestInt()));
         } else if (root.isNull()) {
@@ -75,7 +73,7 @@ namespace bp {
     }
 
     template<>
-    void structure::parse<serializers::Json>(const std::string &_str) {
+    bool structure::parse<serializers::Json>(const std::string &_str) {
         val_.reset();
 
         Json::Value root;
@@ -87,25 +85,26 @@ namespace bp {
         }
 
         if (root.isArray()) {
-            set_type(value_type::Array);
+            value_type_ = value_type::Array;
         } else if (root.isObject()) {
-            set_type(value_type::Object);
+            value_type_ = value_type::Object;
         } else if (root.isBool()) {
-            set_type(value_type::Bool);
+            value_type_ = value_type::Bool;
         } else if (root.isDouble()) {
-            set_type(value_type::Float);
+            value_type_ = value_type::Float;
         } else if (root.isIntegral()) {
-            set_type(value_type::Int);
+            value_type_ = value_type::Int;
         } else if (root.isNull()) {
-            set_type(value_type::Null);
+            value_type_ = value_type::Null;
         } else if (root.isString()) {
-            set_type(value_type::String);
+            value_type_ = value_type::String;
         }
         try {
             val_ = parse_variant(root);
         } catch (std::exception &_e) {
             throw bp::structure::parse_error(_e.what());
         }
+        return true;
     };
 
 }

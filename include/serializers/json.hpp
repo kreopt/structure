@@ -7,11 +7,11 @@
 namespace bp {
     namespace serializers {
         using namespace bp::literals;
-        constexpr symbol::hash_type Json = "json"_hash;
+        constexpr bp::hash_type Json = "json"_h;
     }
     template<>
-    std::string structure::stringify<serializers::Json>() const;
+    std::string structure::serialize<serializers::Json>() const;
     template<>
-    void structure::parse<serializers::Json>(const std::string &_str);
+    bool structure::parse<serializers::Json>(const std::string &_str);
 }
 #endif //SERIALIZERS_JSON_HPP

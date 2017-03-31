@@ -7,30 +7,41 @@ option(BUILD_JSON "build json serializer" ON)
 option(USE_ARDUINO_JSON "use ArduinoJson implementation instead of jsoncpp" OFF)
 option(BUILD_DCM "build dcm serializer" OFF)
 option(BUILD_TEST "build tests" ON)
-option(USE_BOOST_VARIANT "use boost variant" ON)
+option(USE_BOOST_VARIANT "use boost variant" OFF)
 
 set(BpStructure_VERSION_MAJOR 1)
 set(BpStructure_VERSION_MINOR 0)
 set(BpStructure_VERSION_PATCH 0)
 set(BpStructure_VERSION ${BpStructure_VERSION_MAJOR}.${BpStructure_VERSION_MINOR}.${BpStructure_VERSION_PATCH} )
 
-set(SOURCE_FILES main.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp include/variant.hpp)
-set(TEST_FILES tests/test_struct.cpp serializers/structure.cpp include/structure.hpp serializers/structure_iterators.cpp include/variant.hpp)
+set(SOURCE_FILES
+        main.cpp
+        src/structure.cpp
+        include/structure.hpp
+        src/structure_iterators.cpp
+        src/structure_specializations.cpp
+        include/variant.hpp)
+
+set(TEST_FILES
+        tests/test_struct.cpp
+        src/structure.cpp
+        include/structure.hpp
+        src/structure_iterators.cpp
+        src/structure_specializations.cpp
+        include/variant.hpp)
 
 if (BUILD_JSON)
     if (USE_ARDUINO_JSON)
         add_definitions(-DARDUINO_JSON)
         set(JSON_SERIALIZER_FILES
-                serializers/json_arduino.cpp
+                src/serializers/json_arduino.cpp
                 include/serializers/json_arduino.hpp)
     else()
         set(JSON_SERIALIZER_FILES
-                serializers/json.cpp
+                src/serializers/json.cpp
                 include/serializers/json.hpp)
     endif()
-    set(TEST_JSON_FILES tests/test_json.cpp
-            serializers/json_arduino.cpp
-            include/serializers/json_arduino.hpp)
+    set(TEST_JSON_FILES tests/test_json.cpp)
 endif()
 
 find_package(BpUtil 1.0 REQUIRED)
@@ -45,8 +56,8 @@ if (BUILD_TEST)
     add_executable(${PROJECT_NAME}Test ${TEST_FILES} ${TEST_JSON_FILES} ${JSON_SERIALIZER_FILES})
 endif()
 
-add_library(${PROJECT_NAME} SHARED serializers/structure.cpp serializers/structure_iterators.cpp)
-target_link_libraries(${PROJECT_NAME})
+add_library(${PROJECT_NAME} SHARED src/structure.cpp src/structure_iterators.cpp src/structure_specializations.cpp)
+target_link_libraries(${PROJECT_NAME} ${BPUTIL_LIBRARIES})
 
 if (BUILD_TEST)
     target_link_libraries(${PROJECT_NAME}Test  gtest pthread gtest_main  )
@@ -75,7 +86,7 @@ endif()
 
 if (BUILD_DCM)
     find_package(DcmIpc REQUIRED)
-    set(DCM_SOURCES serializers/dcm_buf.cpp include/serializers/dcm_buf.hpp)
+    set(DCM_SOURCES src/serializers/dcm_buf.cpp include/serializers/dcm_buf.hpp)
     add_library(bpserializers_dcmbuf SHARED ${DCM_SOURCES})
     set_target_properties(bpserializers_dcmbuf PROPERTIES VERSION ${BpStructure_VERSION} SOVERSION ${BpStructure_VERSION_MAJOR} )
     target_link_libraries(bpserializers_dcmbuf ${PROJECT_NAME} )

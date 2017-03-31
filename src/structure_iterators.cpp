@@ -1,11 +1,16 @@
 #include "structure.hpp"
 
 using namespace bp::serializable;
+using namespace bp::literals;
 // OBJECT KEYS
+
+constexpr const bp::hash_type KEY_EMPTY = ""_h;
 
 bp::structure::object_key_iterator::object_key_iterator(const structure *_object) : object_(_object) {
     if (object_ && object_->is_object()) {
-        it_ = get_variant<object_ptr>(object_->val_)->begin();
+        auto var = object_->val_->as_object();
+        it_ = var->begin();
+        end_ = var->end();
     }
 }
 
@@ -26,9 +31,9 @@ bool bp::structure::object_key_iterator::operator==(const object_key_iterator& _
     return it_==_rhs.it_;
 }
 
-const char *bp::structure::object_key_iterator::operator*() {
+bp::hash_type bp::structure::object_key_iterator::operator*() {
     if (!object_ || it_==end_) {
-        return nullptr;
+        return KEY_EMPTY;
     }
     return it_->first;
 }
@@ -52,8 +57,8 @@ bp::structure::object_key_iterator::operator=(const bp::structure::object_key_it
 
 bp::structure::object_iterator::object_iterator(const structure *_object) : object_(_object) {
     if (object_ && object_->is_object()) {
-        it_ = get_variant<object_ptr>(object_->val_)->begin();
-        end_ = get_variant<object_ptr>(object_->val_)->end();
+        it_ = object_->val_->as_object()->begin();
+        end_ = object_->val_->as_object()->end();
     }
 }
 
@@ -76,7 +81,7 @@ bool bp::structure::object_iterator::operator==(const bp::structure::object_iter
 
 std::pair<object::key_type, bp::structure> bp::structure::object_iterator::operator*() {
     if (!object_ || it_==end_) {
-        return std::make_pair(""_sym, bp::structure());
+        return std::make_pair(KEY_EMPTY, bp::structure());
     }
     return std::make_pair(it_->first, bp::structure(it_->second));
 }
@@ -105,8 +110,8 @@ bp::structure::array_iterator::array_iterator(const structure *_object) : object
 //        size = object_.size();
 //    }
     if (object_ && object_->is_array()) {
-        it_ = get_variant<array_ptr>(object_->val_)->begin();
-        end_ = get_variant<array_ptr>(object_->val_)->end();
+        it_ = object_->val_->as_array()->begin();
+        end_ = object_->val_->as_array()->end();
     }
 }
 

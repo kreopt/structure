@@ -1,8 +1,7 @@
-#include "structure.hpp"
+#include "lib/util/structure.hpp"
 #include <gtest/gtest.h>
 #include <string>
 #include <algorithm>
-#include <binelpro/symbol.hpp>
 
 using namespace bp::literals;
 
@@ -141,6 +140,14 @@ TEST(StructTest, object_emplace) {
 
     ASSERT_EQ(s.size(), 7);
 //    ASSERT_EQ(s.size(), 5);
+    bp::structure s2({{"a", 1}, {"b", 2}});
+    s.merge(s2);
+#ifdef USE_EXCEPTIONS
+    ASSERT_THROW(s.merge({1,2,3}));
+#endif
+    ASSERT_TRUE(s.has_key("b"_h));
+    ASSERT_EQ(s.at("a"_h).as<int>(), 1);
+    ASSERT_EQ(s.at("b"_h).as<int>(), 2);
 }
 
 TEST(StructTest, data_types) {
